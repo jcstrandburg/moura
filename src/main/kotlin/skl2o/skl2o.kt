@@ -1,7 +1,8 @@
-package morpheus.services.mysql
+package skl2o
 
 import org.sql2o.Connection
 import org.sql2o.Query
+import org.sql2o.Sql2o
 import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.findAnnotation
@@ -34,12 +35,16 @@ fun getTableName(kclass: KClass<*>): String =
 @Target(AnnotationTarget.CLASS)
 annotation class TableName(val tableName: String)
 
+/** Helper annotation to attach MySql primary key to a DbObject */
+@Target(AnnotationTarget.CLASS)
+annotation class PrimaryKey(val columnName: String)
+
 /** Generates a list of colon prefixed sql prepared query params from a class */
 inline fun <reified T: Any> mySqlParams(): String = mySqlParams(T::class)
 fun mySqlParams(kclass: KClass<*>) =
     kclass.declaredMemberProperties.map { ":${it.name}" }.sorted().joinToString(",")
 
-/** Generates a full mysql insert statement for a table with given name and shape */
+/** Generates a full mysql simpleInsert statement for a table with given name and shape */
 inline fun <reified T: Any> mySqlInsertStatement(tableName: String): String = mySqlInsertStatement(T::class, tableName)
 inline fun <reified T: Any> mySqlInsertStatement(): String = mySqlInsertStatement(T::class, getTableName(T::class))
 fun mySqlInsertStatement(kclass: KClass<*>, tableName: String): String =
@@ -60,7 +65,19 @@ fun mySqlSelectStatement(kclass: KClass<*>, tableName: String, condition: String
     "SELECT ${mySqlFields(kclass)} FROM `$tableName` WHERE $condition"
 
 /** Extension method for Sql2o, eases getting primary key of inserted row with ::class.java boilerplate */
-inline fun <reified T: Any> Connection.getKey(): T = getKey(T::class.java)
+inline fun <reified T: Any> Connection.getKeyAs(): T = getKeyAs(T::class)
+fun <T: Any> Connection.getKeyAs(kclass: KClass<T>): T = getKey(kclass.java)
+
+/** Extension method for Sql2o, eases calls to executeScalar without ::class.java boilerplate */
+inline fun <reified T: Any> Query.executeScalarAs(): T = executeScalarAs(T::class)
+fun <T: Any> Query.executeScalarAs(kclass: KClass<T>): T = executeScalar(kclass.java)
+
+/** Extension method that makes it possible to use Sql2o without annoying ::class.java boilerplate */
+inline fun <reified T: Any> Query.executeAndFetchAs() = executeAndFetchAs(T::class)
+fun <T: Any> Query.executeAndFetchAs(kclass: KClass<T>) = executeAndFetch(kclass.java) as List<T>
+
+/** Extension method that makes it possible to use Sql2o without annoying ::class.java boilerplate */
+inline fun <reified T: Any> Query.executeAndFetchFirstAs(): T? = executeAndFetchFirst(T::class.java)
 
 /** Extension method that allows for adding multiple parameters from an object */
 inline fun <reified T: Any> Query.addParameters(params: T) = addParameters(T::class, params)
@@ -72,8 +89,40 @@ fun <T: Any> Query.addParameters(kclass: KClass<T>, params: T): Query {
     return this
 }
 
-/** Extension method that makes it possible to use Sql2o without annoying ::class.java boilerplate */
-inline fun <reified T: Any> Query.executeAndFetch(): List<T> = executeAndFetch(T::class.java)
+/** Extension method that allows for adding multiple parameters from an Map */
+private fun Query.addParametersFromMap(params: Map<String, Any>): Query {
+    for ((param, value) in params) {
+        addParameter(param, value)
+    }
+    return this
+}
 
-/** Extension method that makes it possible to use Sql2o without annoying ::class.java boilerplate */
-inline fun <reified T: Any> Query.executeAndFetchFirst(): T? = executeAndFetchFirst(T::class.java)
+inline fun <reified T: Any> Connection.simpleSelect(condition: String, params: Map<String, Any>) =
+    simpleSelect(T::class, getTableName(T::class), condition, params)
+inline fun <reified T: Any> Connection.simpleSelect(tableName: String, condition: String, params: Map<String, Any>) =
+    simpleSelect(T::class, tableName, condition, params)
+
+fun Connection.simpleSelect(kclass: KClass<*>, tableName: String, condition: String, params: Map<String, Any>) {
+    return createQuery(mySqlSelectStatement(kclass, tableName, condition)).use { query ->
+        query.addParametersFromMap(params).executeAndFetchAs(kclass)
+    }
+}
+
+inline fun <reified T: Any> Connection.simpleInsert(tableName: String, insertMe: T) = simpleInsert(T::class, tableName, insertMe)
+inline fun <reified T: Any> Connection.simpleInsert(insertMe: T) = simpleInsert(T::class, getTableName(T::class), insertMe)
+fun <T: Any> Connection.simpleInsert(kclass: KClass<T>, tableName: String, insertMe: T) {
+    createQuery(mySqlInsertStatement(kclass, tableName) + ";SELECT LAST_INSERT_ID()").use {
+        it.addParameters(kclass, insertMe).executeUpdate().getKeyAs<Int>()
+    }
+}
+
+inline fun <reified T: Any> Connection.simpleDelete(condition: String, params: Map<String, Any>) = simpleDelete(getTableName(T::class), condition, params)
+fun Connection.simpleDelete(tableName: String, condition: String, params: Map<String, Any>) {
+    createQuery("DELETE FROM `$tableName` WHERE $condition").use { query ->
+        query.addParametersFromMap(params).executeUpdate()
+    }
+}
+
+fun <T: Any> Sql2o.openAndUse(block: (Connection) -> T) = open().use(block)
+
+fun <T: Any> Sql2o.query(sql: String, block: (Query) -> T) = this.openAndUse({ conn -> conn.createQuery(sql).let(block) })
