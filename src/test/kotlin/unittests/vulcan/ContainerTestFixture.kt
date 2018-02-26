@@ -12,12 +12,12 @@ class ContainerTestFixture: TestCase() {
         container = Container()
     }
 
-    fun testUniqueLifecycle() {
+    fun `test unique lifecycle`() {
         container.register<IDependencyBase, DependencyConcrete>(Lifecycle.Unique)
         assertNotSame(container.get<IDependencyBase>(), container.get<IDependencyBase>())
     }
 
-    fun testPerContainerLifecycle() {
+    fun `test PerContainer lifecycle`() {
         container.register<IDependencyBase, DependencyConcrete>(Lifecycle.PerContainer)
         val nestedContainer = container.getNestedContainer()
 
@@ -26,28 +26,34 @@ class ContainerTestFixture: TestCase() {
         assertNotSame(container.get<IDependencyBase>(), nestedContainer.get<IDependencyBase>())
     }
 
-    fun testSingletonLifecycle() {
+    fun `test Singleton lifecycle`() {
         container.register<IDependencyBase, DependencyConcrete>(Lifecycle.Singleton)
         val nestedContainer = container.getNestedContainer()
-        assertSame(container.get<IDependencyBase>(), container.get<IDependencyBase>())
+        assertSame(container.get<IDependencyBase>(), nestedContainer.get<IDependencyBase>())
     }
 
-    fun testGetUnregisteredDependencyThrows() {
+    fun `test get unregistered dependency throws`() {
         assertFailsWith(InjectionException::class) { container.get<IDependencyBase>() }
     }
 
-    fun testGetDependencyWithIntParamThrows() {
+    fun `test get dependency with Int param throws`() {
         assertFailsWith(InjectionException::class) { container.get<DependencyWithIntParam>() }
     }
 
-    fun testGetDependencyWithNullableStringParamThrows() {
+    fun `test get dependency with nullable String param throws`() {
         assertFailsWith(InjectionException::class) { container.get<DependencyWithNullableStringParam>() }
     }
 
-    fun testGetSingletonWithPerContainerDependencyThrows() {
+    fun `test get Singleton with PerContainer dependency throws`() {
         container.register<IDependencyBase, DependencyConcrete>(Lifecycle.PerContainer)
         container.register<IThingy, ThingyConcrete>(Lifecycle.Singleton)
         assertFailsWith(InjectionException::class) { container.get<IThingy>() }
+    }
+
+    fun `test registering type against itself`() {
+        container.register<IDependencyBase, DependencyConcrete>()
+        container.register<DependencyConcrete, DependencyConcrete>()
+        assertSame(container.get<IDependencyBase>(), container.get<DependencyConcrete>())
     }
 
     lateinit var container: Container
@@ -59,5 +65,5 @@ class ContainerTestFixture: TestCase() {
     class ThingyConcrete(dependency: IDependencyBase): IThingy
 
     class DependencyWithIntParam(x: Int)
-    class DependencyWithNullableStringParam(x: String)
+    class DependencyWithNullableStringParam(x: String?)
 }

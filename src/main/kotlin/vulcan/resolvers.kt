@@ -1,9 +1,8 @@
 package vulcan
 
-abstract class Resolver(
-    protected val instatiator: Container.() -> Any,
-    val lifecycle: Lifecycle
-) {
+typealias Instantiator = Container.() -> Any
+
+abstract class Resolver(protected val instatiator: Instantiator, val lifecycle: Lifecycle) {
 
     abstract fun resolve(container: Container): Any
 
@@ -12,19 +11,17 @@ abstract class Resolver(
     fun instantiate(container: Container): Any = container.instatiator()
 }
 
-class AlwaysUniqueResolver : Resolver {
-
-    constructor(instatiator: Container.() -> Any) : super(instatiator, Lifecycle.Unique)
-
+class AlwaysUniqueResolver(instatiator: Instantiator)
+    : Resolver(instatiator, Lifecycle.Unique)
+{
     override fun resolve(container: Container) = instantiate(container)
 
     override fun getResolverForNestedContainer() = this
 }
 
-abstract class CachingResolver : Resolver {
-
-    constructor(instatiator: Container.() -> Any, lifecycle: Lifecycle) : super(instatiator, lifecycle)
-
+abstract class CachingResolver(instatiator: Instantiator, lifecycle: Lifecycle)
+    : Resolver(instatiator, lifecycle)
+{
     override fun resolve(container: Container): Any {
         synchronized(this) {
             if (cachedValue == null)
@@ -37,16 +34,14 @@ abstract class CachingResolver : Resolver {
     private var cachedValue : Any? = null
 }
 
-class SingletonResolver : CachingResolver {
-
-    constructor(instatiator: Container.() -> Any) : super(instatiator, Lifecycle.Singleton)
-
+class SingletonResolver(instatiator: Container.() -> Any)
+    : CachingResolver(instatiator, Lifecycle.Singleton)
+{
     override fun getResolverForNestedContainer() = this
 }
 
-class TransientResolver : CachingResolver {
-
-    constructor(instatiator: Container.() -> Any) : super(instatiator, Lifecycle.PerContainer)
-
+class TransientResolver(instatiator: Container.() -> Any)
+    : CachingResolver(instatiator, Lifecycle.PerContainer)
+{
     override fun getResolverForNestedContainer() = TransientResolver(instatiator)
 }

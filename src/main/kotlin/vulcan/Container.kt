@@ -2,6 +2,7 @@ package vulcan
 
 import kotlin.reflect.KClass
 import kotlin.reflect.KVisibility
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.primaryConstructor
 
 class Container(private val resolvers: HashMap<KClass<*>, Resolver>) {
@@ -17,18 +18,24 @@ class Container(private val resolvers: HashMap<KClass<*>, Resolver>) {
     inline fun <reified T: Any> register(noinline instantiator: Container.() -> T) =
         register(T::class, instantiator, Lifecycle.Singleton)
 
-    inline fun <reified T: Any> register(noinline instantiator: Container.() -> T, lifecycle: Lifecycle) =
+    inline fun <reified T: Any> register(noinline instantiator: Container.() -> T, lifecycle: Lifecycle = Lifecycle.Singleton) =
         register(T::class, instantiator, lifecycle)
 
-    inline fun <reified T: Any, reified U: T> register(lifecycle: Lifecycle = Lifecycle.Singleton) {
-        if (U::class == T::class)
-            throw InjectionException("Cannot register type ${U::class.qualifiedName} against itself")
+    inline fun <reified T: Any, reified U: T> register(lifecycle: Lifecycle = Lifecycle.Singleton) =
+        register(T::class, U::class, lifecycle)
 
-        register(T::class, { get(U::class, lifecycle) }, lifecycle)
+    fun register(kclass: KClass<*>, kclass2: KClass<*>, lifecycle: Lifecycle = Lifecycle.Singleton) {
+        if (!kclass2.isSubclassOf(kclass))
+            throw IllegalArgumentException()
+
+        if (kclass == kclass2)
+            register(kclass, { getImplicit(kclass2, lifecycle) }, lifecycle)
+        else
+            register(kclass, { get(kclass2, lifecycle) }, lifecycle)
     }
 
     inline fun <reified T: Any> register(instance: T, lifecycle: Lifecycle = Lifecycle.Singleton) =
-        register({ instance }, lifecycle)
+        register(T::class, { instance }, lifecycle)
 
     fun register(kclass: KClass<*>, instantiator: Container.() -> Any, lifecycle: Lifecycle = Lifecycle.Singleton): Container {
         if (resolvers.containsKey(kclass))
@@ -54,6 +61,11 @@ class Container(private val resolvers: HashMap<KClass<*>, Resolver>) {
 
             return resolver.resolve(this)
         }
+
+        return getImplicit(kclass, lifecycle)
+    }
+
+    private fun getImplicit(kclass: KClass<*>, lifecycle: Lifecycle) : Any {
 
         if (kclass == String::class)
             throw InjectionException("Cannot instantiate ${kclass.qualifiedName} via implicit registration")
