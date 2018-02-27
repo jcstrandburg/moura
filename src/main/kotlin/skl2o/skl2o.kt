@@ -22,6 +22,10 @@ inline fun <reified T: Any> mySqlFields(tableAlias: String): String = mySqlField
 fun mySqlFields(kclass: KClass<*>, tableAlias: String? = null) =
     kclass.declaredMemberProperties.map { "`${tableAlias?.let { "$it`.`"}}${toMySqlCasing(it.name)}`" }.sorted().joinToString(",")
 
+/** Helper annotation to attach MySql table name to a DbObject */
+@Target(AnnotationTarget.CLASS)
+annotation class TableName(val tableName: String)
+
 /** Gets the table name via the TableName annotation on a clas, or null if no attribute is present */
 inline fun <reified T: Any> getTableNameOrNull() = getTableNameOrNull(T::class)
 fun getTableNameOrNull(kclass: KClass<*>): String? = kclass.findAnnotation<TableName>()?.tableName
@@ -31,13 +35,25 @@ inline fun <reified T: Any> getTableName() = getTableName(T::class)
 fun getTableName(kclass: KClass<*>): String =
     getTableNameOrNull(kclass) ?: throw IllegalArgumentException("No TableName annotation found")
 
-/** Helper annotation to attach MySql table name to a DbObject */
-@Target(AnnotationTarget.CLASS)
-annotation class TableName(val tableName: String)
-
 /** Helper annotation to attach MySql primary key to a DbObject */
-@Target(AnnotationTarget.CLASS)
-annotation class PrimaryKey(val columnName: String)
+@Target(AnnotationTarget.PROPERTY)
+annotation class PrimaryKey
+
+inline fun <reified T: Any> getPrimaryKeyOrNull() = getPrimaryKeyOrNull(T::class)
+fun getPrimaryKeyOrNull(kclass: KClass<*>): String? {
+    val propertiesWithPrimaryKeyAnnotation = kclass
+        .declaredMemberProperties
+        .filter { it.findAnnotation<PrimaryKey>() != null }
+
+    if (propertiesWithPrimaryKeyAnnotation.size > 1)
+        throw Exception("Multiple properties annotated with PrimaryKey")
+
+    return propertiesWithPrimaryKeyAnnotation.singleOrNull()?.let { toMySqlCasing(it.name) }
+}
+
+inline fun <reified T: Any> getPrimaryKey() = getPrimaryKey(T::class)
+fun getPrimaryKey(kclass: KClass<*>): String =
+    getPrimaryKeyOrNull(kclass) ?: throw IllegalArgumentException("No TableName annotation found")
 
 /** Generates a list of colon prefixed sql prepared query params from a class */
 inline fun <reified T: Any> mySqlParams(): String = mySqlParams(T::class)
@@ -99,19 +115,24 @@ private fun Query.addParametersFromMap(params: Map<String, Any>): Query {
 
 inline fun <reified T: Any> Connection.simpleSelect(condition: String, params: Map<String, Any>) =
     simpleSelect(T::class, getTableName(T::class), condition, params)
-inline fun <reified T: Any> Connection.simpleSelect(tableName: String, condition: String, params: Map<String, Any>) =
-    simpleSelect(T::class, tableName, condition, params)
 
-fun Connection.simpleSelect(kclass: KClass<*>, tableName: String, condition: String, params: Map<String, Any>) {
+fun <T: Any> Connection.simpleSelect(kclass: KClass<T>, tableName: String, condition: String, params: Map<String, Any>): List<T> {
     return createQuery(mySqlSelectStatement(kclass, tableName, condition)).use { query ->
         query.addParametersFromMap(params).executeAndFetchAs(kclass)
     }
 }
 
+inline fun <reified T: Any> Connection.simpleSelectByPrimaryKey(id: Int) =
+    simpleSelectByPrimaryKey(T::class, getTableName(T::class), getPrimaryKey(T::class), id)
+
+fun <T: Any> Connection.simpleSelectByPrimaryKey(kclass: KClass<T>, tableName: String, primaryKeyName: String, id: Int): T? =
+    simpleSelect(kclass, tableName, "$primaryKeyName=:userId", mapOf("userId" to id)).singleOrNull()
+
+
 inline fun <reified T: Any> Connection.simpleInsert(tableName: String, insertMe: T) = simpleInsert(T::class, tableName, insertMe)
 inline fun <reified T: Any> Connection.simpleInsert(insertMe: T) = simpleInsert(T::class, getTableName(T::class), insertMe)
-fun <T: Any> Connection.simpleInsert(kclass: KClass<T>, tableName: String, insertMe: T) {
-    createQuery(mySqlInsertStatement(kclass, tableName) + ";SELECT LAST_INSERT_ID()").use {
+fun <T: Any> Connection.simpleInsert(kclass: KClass<T>, tableName: String, insertMe: T): Int {
+    return createQuery(mySqlInsertStatement(kclass, tableName) + ";SELECT LAST_INSERT_ID()").use {
         it.addParameters(kclass, insertMe).executeUpdate().getKeyAs<Int>()
     }
 }
@@ -123,6 +144,6 @@ fun Connection.simpleDelete(tableName: String, condition: String, params: Map<St
     }
 }
 
-fun <T: Any> Sql2o.openAndUse(block: (Connection) -> T) = open().use(block)
+fun <T: Any?> Sql2o.openAndUse(block: (Connection) -> T) = open().use(block)
 
-fun <T: Any> Sql2o.query(sql: String, block: (Query) -> T) = this.openAndUse({ conn -> conn.createQuery(sql).let(block) })
+fun <T: Any?> Sql2o.query(sql: String, block: (Query) -> T) = this.openAndUse({ conn -> conn.createQuery(sql).let(block) })
