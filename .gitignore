@@ -12,3 +12,5 @@ out/*
 .idea/workspace.xml
 .idea/tasks.xml
 \.idea/dictionaries/
+
+frontend-js/node_modules/

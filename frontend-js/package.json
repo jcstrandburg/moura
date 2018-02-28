@@ -1,0 +1,53 @@
+{
+  "name": "morpheus",
+  "jest": {
+    "browser": true,
+    "notify": true,
+    "verbose": true,
+    "moduleDirectories": [
+      "node_modules",
+      "./"
+    ]
+  },
+  "version": "0.0.1",
+  "description": "Morpheus front end",
+  "main": "main.js",
+  "dependencies": {
+    "babel-core": "^6.24.0",
+    "babel-loader": "^6.4.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "bootstrap": "^3.3.7",
+    "react": "^15.4.2",
+    "react-dom": "^15.4.2",
+    "react-popper": "^0.7.4",
+    "react-redux": "^5.0.6",
+    "react-router-dom": "^4.2.2",
+    "react-router-redux": "^5.0.0-alpha.8",
+    "react-transition-group": "^2.2.1",
+    "reactstrap": "^4.8.0",
+    "redux": "^3.6.0",
+    "redux-thunk": "^2.2.0",
+    "uuid": "^3.1.0",
+    "webpack": "^2.7.0"
+  },
+  "devDependencies": {
+    "babel-jest": "^21.2.0",
+    "jest": "^21.2.0"
+  },
+  "scripts": {
+    "bundle": "webpack --config webpack.config.js --colors",
+    "bundle:watch": "webpack --config webpack.config.js --colors --progress --watch",
+    "test": "jest --colors --notify",
+    "test:watch": "npm test -- --colors --watch"
+  },
+  "loaders": {
+    "loaders": [
+      "babel"
+    ]
+  },
+  "author": "Justin Strandburg",
+  "license": "ISC"
+}
