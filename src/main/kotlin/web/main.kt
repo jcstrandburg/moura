@@ -9,10 +9,13 @@ import domain.accounts.IAccountsRepository
 import domain.accounts.UserCreate
 import domain.discussion.IDiscussionRepository
 import domain.projects.IProjectRepository
+import io.javalin.Context
 import io.javalin.Javalin
 import io.javalin.embeddedserver.Location
 import org.mindrot.jbcrypt.BCrypt
+import services.AuthenticationService
 import vulcan.Container
+import vulcan.Lifecycle
 import web.actions.GetSignInForm
 import web.actions.PostSignInForm
 import web.actions.ServeApp
@@ -38,6 +41,7 @@ fun main(args: Array<String>) {
     container.register<IAccountsRepository, InMemoryAccountsRepository>()
     container.register<IProjectRepository, InMemoryProjectRepository>()
     container.register<IDiscussionRepository, InMemoryDiscussionRepository>()
+    container.register<AuthenticationService, AuthenticationService>(Lifecycle.PerContainer)
 
     val accountsRepository = container.get<IAccountsRepository>()
 

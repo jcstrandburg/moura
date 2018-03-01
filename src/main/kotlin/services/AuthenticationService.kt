@@ -7,31 +7,44 @@ import io.javalin.builder.CookieBuilder
 import java.util.*
 
 class AuthenticationService(val context: Context, val accountRepository: IAccountsRepository, val passwordHasher: BcryptPasswordHasher) {
+
+    private var authenticatedUser: User? = null
+
     /**
      * Gets the currently authenticated user via cookies
      */
     fun getLoggedInUser(): User? {
+        if (authenticatedUser != null)
+            return authenticatedUser
+
         val userId = context.cookie(USER_ID_COOKIE)?.toIntOrNull()
         val authToken = context.cookie(AUTH_TOKEN_COOKIE)
         if (userId == null || authToken == null)
             return null
 
         val user = accountRepository.getUserById(userId) ?: return null
-        return if (user.authToken == authToken) user else null
+
+        authenticatedUser = if (user.authToken == authToken)
+            user
+        else
+            null
+
+        return authenticatedUser
     }
 
     fun logInUser(email: String, plainPassword: String): User? {
+        authenticatedUser = null
         val user = accountRepository.getUserByEmail(email) ?: return null
 
         if (passwordHasher.checkPassword(plainPassword, user.password)) {
-            val authenticatedUser = accountRepository.setUserAuthToken(user.id, UUID.randomUUID().toString())
+            val userWithAuthToken = accountRepository.setUserAuthToken(user.id, UUID.randomUUID().toString())
 
-            setCookie(USER_ID_COOKIE, authenticatedUser.id.toString())
-            setCookie(AUTH_TOKEN_COOKIE, authenticatedUser.authToken!!)
+            setCookie(USER_ID_COOKIE, userWithAuthToken.id.toString())
+            setCookie(AUTH_TOKEN_COOKIE, userWithAuthToken.authToken!!)
 
-            return authenticatedUser
+            authenticatedUser = userWithAuthToken
         }
-        return null
+        return authenticatedUser
     }
 
     fun hashPassword(plainPassword: String) = passwordHasher.hashPassword(plainPassword)

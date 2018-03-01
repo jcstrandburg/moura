@@ -15,7 +15,7 @@ class CreateUser(
 ) : JsonAction(authenticationService) {
 
     override fun before(): JsonResult? {
-        return if (authenticatedUser != null)
+        return if (authenticationService.getLoggedInUser() != null)
             BadRequest()
         else
             null
