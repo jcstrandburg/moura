@@ -19,10 +19,9 @@ class GetProjectComments(
     override fun doHandle(ctx: Context): JsonResult {
         val projectId = ctx.param("projectId")?.toIntOrNull() ?: return BadRequest()
         val project = projectRepository.getProject(projectId) ?: return NotFound()
-        val organization = accountsReadRepository.getOrganization(project.organizationId)
-            ?: throw Exception("Unable to locate organization $project.organizationId")
 
-        if (!accountsReadRepository.isUserInOrganization(authenticatedUser.id, organization.id))
+        // don't expose the existence of projects to users who shouldn't be able to see them
+        if (!accountsReadRepository.isUserInOrganization(authenticatedUser.id, project.organizationId))
             return NotFound()
 
         val messages = discussionRepository.getDiscussionMessages(project.discussionContextId)

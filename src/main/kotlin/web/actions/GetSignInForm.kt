@@ -30,7 +30,7 @@ class GetSignInForm(
     <body>
         $err
         <form method="POST">
-            Name: <input type="text" name="username"></input><br>
+            Email: <input type="text" name="email"></input><br>
             Password: <input type="password" name="password"></input><br>
             <input type="submit" />
         </form>

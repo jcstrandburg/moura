@@ -15,7 +15,7 @@ class GetUserById(
     override fun doHandle(ctx: Context): JsonResult {
         val userId: Int = ctx.param("userId")?.toIntOrNull() ?: return BadRequest()
 
-        val user = accountsRepository.getUser(userId) ?: return NotFound()
+        val user = accountsRepository.getUserById(userId) ?: return NotFound()
         return Ok(UserDto(
             id = user.id,
             name = user.name,

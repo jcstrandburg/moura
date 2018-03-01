@@ -14,12 +14,12 @@ class InMemoryAccountsRepository : IAccountsRepository {
     private val userIdsByOrgId = HashMap<Int, HashSet<Int>>()
 
     override fun createUser(user: UserCreate): User =
-        users.insert { id -> User(id, user.name, user.password, user.authToken, user.alias, user.email) }
+        users.insert { id -> User(id, user.name, user.password, null, user.alias, user.email) }
 
-    override fun getUser(name: String): User? =
-        users.entities.singleOrNull { it.name == name }
+    override fun getUserByEmail(email: String): User? =
+        users.entities.singleOrNull { it.email == email }
 
-    override fun getUser(id: Int): User? =
+    override fun getUserById(id: Int): User? =
         users.get(id)
 
     override fun setUserAuthToken(id: Int, token: String): User {

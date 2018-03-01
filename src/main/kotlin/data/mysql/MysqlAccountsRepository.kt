@@ -56,17 +56,17 @@ class MysqlAccountsRepository(private val sql2o: Sql2o) : IAccountsRepository {
         val userId = sql2o.openAndUse { conn ->
             conn.simpleInsert(DbUserCreate(user.name, user.password, user.alias, user.email))
         }
-        return getUser(userId)!!
+        return getUserById(userId)!!
     }
 
-    override fun getUser(name: String): User? {
+    override fun getUserByEmail(email: String): User? {
         val dbUser = sql2o.openAndUse { conn ->
-            conn.simpleSelect<DbUser>("username=:name", mapOf("name" to name)).singleOrNull()
+            conn.simpleSelect<DbUser>("email=:email", mapOf("email" to email)).singleOrNull()
         }
         return dbUser?.toDomain()
     }
 
-    override fun getUser(id: Int): User? {
+    override fun getUserById(id: Int): User? {
         val dbUser = sql2o.openAndUse { conn ->
             conn.simpleSelectByPrimaryKey<DbUser>(id)
         }
@@ -83,7 +83,7 @@ class MysqlAccountsRepository(private val sql2o: Sql2o) : IAccountsRepository {
                 .executeUpdate()
         }
 
-        return getUser(id) ?: throw NoSuchElementException()
+        return getUserById(id) ?: throw NoSuchElementException()
     }
 
     override fun updateUser(user: User): User? {
@@ -103,7 +103,7 @@ WHERE
                 .executeUpdate()
         }
 
-        return getUser(user.id)
+        return getUserById(user.id)
     }
 
     override fun addUserToOrganization(userId: Int, organizationId: Int) {

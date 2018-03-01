@@ -12,9 +12,16 @@ abstract class JsonAction(
 
     protected val authenticatedUser by lazy { authenticationService.getLoggedInUser()!! }
 
-    override fun handle(ctx: Context) {
+    open fun before(): JsonResult? {
+        return if (authenticationService.getLoggedInUser() == null)
+            Unauthorized()
+        else
+            null
+    }
 
-        val result = authenticationService.getLoggedInUser()?.let { doHandle(ctx) } ?: Unauthorized()
+    override fun handle(ctx: Context) {
+        val result = before() ?: doHandle(ctx)
+
         ctx.status(result.status.httpCode)
         ctx.contentType("application/json")
         ctx.result(gson.toJson(result.response))
