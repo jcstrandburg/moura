@@ -14,3 +14,5 @@ out/*
 \.idea/dictionaries/
 
 frontend-js/node_modules/
+
+src/main/resources/static/index\.js
