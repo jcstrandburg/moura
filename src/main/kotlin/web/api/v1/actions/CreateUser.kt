@@ -22,7 +22,7 @@ class CreateUser(
     }
 
     override fun doHandle(ctx: Context): JsonResult {
-        val body = fromBody<UserCreateDto>(ctx) ?: return BadRequest()
+        val body = fromBody<UserCreateDto>(ctx)
 
         val userCreate = UserCreate(
             name = body.name,

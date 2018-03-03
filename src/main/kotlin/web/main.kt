@@ -1,6 +1,11 @@
 package web
 
+import adr.JsonAction
 import adr.Router
+import com.beust.klaxon.Converter
+import com.beust.klaxon.JsonObject
+import com.beust.klaxon.JsonValue
+import com.beust.klaxon.Klaxon
 import data.inmemory.InMemoryAccountsRepository
 import data.inmemory.InMemoryDiscussionRepository
 import data.inmemory.InMemoryProjectRepository
@@ -31,6 +36,10 @@ import web.api.v1.actions.GetProjectById
 import web.api.v1.actions.GetProjectComments
 import web.api.v1.actions.GetProjectsForOrganization
 import web.api.v1.actions.GetUserById
+import java.io.StringReader
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import kotlin.reflect.KClass
 
 fun main(args: Array<String>) {
 
@@ -62,7 +71,33 @@ fun main(args: Array<String>) {
 
     app.enableStaticFiles("""C:\code\moura\src\main\resources\static\""", Location.EXTERNAL)
 
-    val router = Router(doGetAction = { ctx, kclass -> container.getNestedContainer().register(ctx).get(kclass) })
+    fun getActionForRouter(ctx: Context, kclass: KClass<*>): Any {
+
+        val nestedContainer = container.getNestedContainer()
+        nestedContainer.register(ctx)
+
+        return nestedContainer.get(kclass)
+    }
+
+    val klaxon = Klaxon()
+        .converter(object: Converter<OffsetDateTime> {
+            override fun toJson(value: OffsetDateTime): String? = value.atZoneSameInstant(ZoneOffset.UTC).toString()
+            override fun fromJson(jv: JsonValue): OffsetDateTime = OffsetDateTime.parse(jv.string)
+        })
+
+    JsonAction.configureSerializer( object: JsonAction.Serializer {
+        override fun <T : Any> toJson(value: T) = klaxon.toJsonString(value)
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : Any> fromJson(json: String, kclass: KClass<T>): T {
+            return klaxon.fromJsonObject(
+                klaxon.parser(kclass).parse(StringReader(json)) as JsonObject,
+                kclass.java,
+                kclass) as T
+        }
+    })
+
+    val router = Router(doGetAction = ::getActionForRouter)
     router.routes(app) {
         path("/signin") {
             get<GetSignInForm>()
