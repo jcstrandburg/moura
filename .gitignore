@@ -16,3 +16,5 @@ out/*
 frontend-js/node_modules/
 
 src/main/resources/static/index\.js
+
+src/main/kotlin/scripts/
