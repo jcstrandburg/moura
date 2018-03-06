@@ -1,0 +1,25 @@
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgb(34, 49, 63);
+}
+
+.main-header-text {
+    font-size: 30px;
+    color: white;
+}
+
+.main-header-dropdown {
+    margin-right: 50px;
+}
+
+.action-link {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.dropdown-menu {
+    left: unset;
+    right: 0;
+}

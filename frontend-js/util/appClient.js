@@ -19,19 +19,13 @@ export default class AppClient {
             [httpCodes.OK]: user => user,
         }));
 
-    createMessage = (message) => this.jsonClient.post(this.apiBase + '/messages', message)
-        .then(response => response.handle({
-            [httpCodes.CREATED]: message => message,
-        }));
-
     signOut() {
         let fetchOptions = {
             credentials: "same-origin",
-            method: 'POST',
             headers: { accept: 'text/html', 'X-XSRF-TOKEN': getCsrfToken() }
         }
 
-        return fetch('/logout', fetchOptions)
+        return fetch('/signout', fetchOptions)
             .then(response => {
                 if (response.status != 200) {
                     throw new Error("Unexpected status code on signout: " + response.status);

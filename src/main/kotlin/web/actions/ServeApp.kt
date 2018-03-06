@@ -30,7 +30,7 @@ class ServeApp(
         <link rel="stylesheet" href="/styles.css?$cacheBuster">
     </head>
     <body>
-        <div userId="app" class="app-container">
+        <div id="app" class="app-container">
             Hello world
             <a href="/signout">Log Out</a>
         </div>
