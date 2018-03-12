@@ -13,7 +13,7 @@ data class ProjectCreate(
     val parentProjectId: Int?)
 
 interface IProjectRepository {
-    fun getProject(projectId: Int): Project?
+    fun getProjectById(projectId: Int): Project?
     fun createProject(project: ProjectCreate): Project
     fun getProjectsForOrganization(organizationId: Int, parentProjectId: Int?): List<Project>
 }

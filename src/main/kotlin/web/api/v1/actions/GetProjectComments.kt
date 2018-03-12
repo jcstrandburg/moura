@@ -18,7 +18,7 @@ class GetProjectComments(
 ) : JsonAction(authenticationService) {
     override fun doHandle(ctx: Context): JsonResult {
         val projectId = ctx.param("projectId")?.toIntOrNull() ?: return BadRequest()
-        val project = projectRepository.getProject(projectId) ?: return NotFound()
+        val project = projectRepository.getProjectById(projectId) ?: return NotFound()
 
         // don't expose the existence of projects to users who shouldn't be able to see them
         if (!accountsReadRepository.isUserInOrganization(authenticatedUser.id, project.organizationId))

@@ -12,15 +12,22 @@ import skl2o.openAndUse
 import skl2o.simpleInsert
 import skl2o.simpleSelect
 import skl2o.simpleSelectByPrimaryKey
+import skl2o.toTimestamp
+import skl2o.toUtcOffsetDateTime
+import java.sql.Timestamp
 import java.time.OffsetDateTime
 
-class MysqlDiscussionContextService(private val sql2o: Sql2o) : IDiscussionContextRepository, IDiscussionRepository {
+class MysqlDiscussionRepository(private val sql2o: Sql2o) : IDiscussionContextRepository, IDiscussionRepository {
 
-    override fun addDiscussionMessage(message: DiscussionMessageCreate): DiscussionMessage {
+    override fun createDiscussionMessage(message: DiscussionMessageCreate, createdTime: OffsetDateTime): DiscussionMessage {
 
-        val dbDiscussionMessage = DbDiscussionMessageCreate(message.contextId, message.userId, message.content, OffsetDateTime.now())
+        val dbDiscussionMessage = DbDiscussionMessageCreate(
+            message.contextId,
+            message.userId,
+            message.content,
+            toTimestamp(createdTime))
 
-        val dbMessage =sql2o.openAndUse { conn ->
+        val dbMessage = sql2o.openAndUse { conn ->
             val id = conn.simpleInsert(dbDiscussionMessage)
             conn.simpleSelectByPrimaryKey<DbDiscussionMessage>(id)!!
         }
@@ -49,22 +56,22 @@ class MysqlDiscussionContextService(private val sql2o: Sql2o) : IDiscussionConte
 
     companion object {
         fun DbDiscussionMessage.toDomain() =
-            DiscussionMessage(discussionMessageId, discussionContextId, userId, content, createdTime)
+            DiscussionMessage(discussionMessageId, discussionContextId, userId, content, toUtcOffsetDateTime(createdTime))
     }
 
-    @TableName("discussion_message")
+    @TableName("discussion_messages")
     data class DbDiscussionMessage(
         @PrimaryKey
         val discussionMessageId: Int,
         val discussionContextId: Int,
         val userId: Int,
         val content: String,
-        val createdTime: OffsetDateTime)
+        val createdTime: Timestamp)
 
-    @TableName("discussion_message")
+    @TableName("discussion_messages")
     data class DbDiscussionMessageCreate(
         val discussionContextId: Int,
         val userId: Int,
         val content: String,
-        val createdTime: OffsetDateTime)
+        val createdTime: Timestamp)
 }

@@ -12,7 +12,7 @@ class InMemoryProjectRepository(
 
     private val projects = AutoIncrementMemoryRepository<Project>()
 
-    override fun getProject(projectId: Int): Project? = projects.get(projectId)
+    override fun getProjectById(projectId: Int): Project? = projects.get(projectId)
 
     override fun createProject(project: ProjectCreate): Project {
         return projects.insert { id -> Project(

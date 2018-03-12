@@ -5,6 +5,7 @@ import domain.projects.IProjectRepository
 import domain.projects.Project
 import domain.projects.ProjectCreate
 import org.sql2o.Sql2o
+import skl2o.PrimaryKey
 import skl2o.TableName
 import skl2o.executeAndFetchAs
 import skl2o.mySqlSelectStatement
@@ -17,7 +18,7 @@ class MysqlProjectRepository(
     private val discussionContextService: IDiscussionContextRepository
 ): IProjectRepository {
 
-    override fun getProject(projectId: Int): Project? =
+    override fun getProjectById(projectId: Int): Project? =
         sql2o.openAndUse { it.simpleSelectByPrimaryKey<DbProject>(projectId) }?.toDomain()
 
     override fun createProject(project: ProjectCreate): Project {
@@ -31,7 +32,7 @@ class MysqlProjectRepository(
             ))
         }
 
-        return getProject(id)!!
+        return getProjectById(id)!!
     }
 
     override fun getProjectsForOrganization(organizationId: Int, parentProjectId: Int?): List<Project> {
@@ -63,15 +64,16 @@ AND ${if (parentProjectId == null) "parent_project_id IS NULL" else "parent_proj
         }
     }
 
-    @TableName("project")
+    @TableName("projects")
     data class DbProject(
+        @PrimaryKey
         val projectId: Int,
         val name: String,
         val organizationId: Int,
         val discussionContextId: Int,
         val parentProjectId: Int?)
 
-    @TableName("project")
+    @TableName("projects")
     data class DbProjectCreate(
         val name: String,
         val organizationId: Int,

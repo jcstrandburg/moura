@@ -3,6 +3,9 @@ package skl2o
 import org.sql2o.Connection
 import org.sql2o.Query
 import org.sql2o.Sql2o
+import java.sql.Timestamp
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.findAnnotation
@@ -17,10 +20,17 @@ fun toMySqlCasing(fieldName: String): String = fieldName.replace(toMySqlCasingRe
 private val toMySqlCasingRegex = "[A-Z]".toRegex()
 
 /** Generates a comma separated list of sql-style fields names from a class */
-inline fun <reified T: Any> mySqlFields(): String = mySqlFields(T::class, null)
-inline fun <reified T: Any> mySqlFields(tableAlias: String): String = mySqlFields(T::class, tableAlias)
-fun mySqlFields(kclass: KClass<*>, tableAlias: String? = null) =
-    kclass.declaredMemberProperties.map { "`${tableAlias?.let { "$it`.`"}}${toMySqlCasing(it.name)}`" }.sorted().joinToString(",")
+inline fun <reified T: Any> mySqlFields(): String = mySqlFields(T::class, true, null)
+inline fun <reified T: Any> mySqlFields(tableAlias: String): String = mySqlFields(T::class, true, tableAlias)
+fun mySqlFields(kclass: KClass<*>, includeColumnAliases: Boolean, tableAlias: String? = null): String {
+    val prefix = tableAlias?.let { "`$it`.`"} ?: ""
+
+    return kclass.declaredMemberProperties.map { property ->
+        val mysqlColumn = toMySqlCasing(property.name)
+        val postfix = if (includeColumnAliases) " as `${property.name}`" else ""
+        "$prefix`$mysqlColumn`$postfix"
+    }.sorted().joinToString(",")
+}
 
 /** Helper annotation to attach MySql table name to a DbObject */
 @Target(AnnotationTarget.CLASS)
@@ -64,7 +74,7 @@ fun mySqlParams(kclass: KClass<*>) =
 inline fun <reified T: Any> mySqlInsertStatement(tableName: String): String = mySqlInsertStatement(T::class, tableName)
 inline fun <reified T: Any> mySqlInsertStatement(): String = mySqlInsertStatement(T::class, getTableName(T::class))
 fun mySqlInsertStatement(kclass: KClass<*>, tableName: String): String =
-    "INSERT INTO `$tableName` (${mySqlFields(kclass, null)}) VALUES (${mySqlParams(kclass)})"
+    "INSERT INTO `$tableName` (${mySqlFields(kclass, false)}) VALUES (${mySqlParams(kclass)})"
 
 /** Generates a full mysql update statement for a table with given name and shape */
 inline fun <reified T: Any> mySqlUpdateStatement(tableName: String, key: String) = mySqlUpdateStatement(T::class, tableName, key)
@@ -78,7 +88,7 @@ fun mySqlUpdateStatement(kclass: KClass<*>, tableName: String, key: String): Str
 inline fun <reified T: Any> mySqlSelectStatement(tableName: String, condition: String) = mySqlSelectStatement(T::class, tableName, condition)
 inline fun <reified T: Any> mySqlSelectStatement(condition: String) = mySqlSelectStatement(T::class, getTableName(T::class), condition)
 fun mySqlSelectStatement(kclass: KClass<*>, tableName: String, condition: String): String =
-    "SELECT ${mySqlFields(kclass)} FROM `$tableName` WHERE $condition"
+    "SELECT ${mySqlFields(kclass, true)} FROM `$tableName` WHERE $condition"
 
 /** Extension method for Sql2o, eases getting primary key of inserted row with ::class.java boilerplate */
 inline fun <reified T: Any> Connection.getKeyAs(): T = getKeyAs(T::class)
@@ -132,7 +142,7 @@ fun <T: Any> Connection.simpleSelectByPrimaryKey(kclass: KClass<T>, tableName: S
 inline fun <reified T: Any> Connection.simpleInsert(tableName: String, insertMe: T) = simpleInsert(T::class, tableName, insertMe)
 inline fun <reified T: Any> Connection.simpleInsert(insertMe: T) = simpleInsert(T::class, getTableName(T::class), insertMe)
 fun <T: Any> Connection.simpleInsert(kclass: KClass<T>, tableName: String, insertMe: T): Int {
-    return createQuery(mySqlInsertStatement(kclass, tableName) + ";SELECT LAST_INSERT_ID()").use {
+    return createQuery(mySqlInsertStatement(kclass, tableName)).use {
         it.addParameters(kclass, insertMe).executeUpdate().getKeyAs<Int>()
     }
 }
@@ -147,3 +157,6 @@ fun Connection.simpleDelete(tableName: String, condition: String, params: Map<St
 fun <T: Any?> Sql2o.openAndUse(block: (Connection) -> T) = open().use(block)
 
 fun <T: Any?> Sql2o.query(sql: String, block: (Query) -> T) = this.openAndUse({ conn -> conn.createQuery(sql).let(block) })
+
+fun toUtcOffsetDateTime(ts: Timestamp): OffsetDateTime = OffsetDateTime.ofInstant(ts.toInstant(), ZoneOffset.UTC)
+fun toTimestamp(odt: OffsetDateTime): Timestamp = Timestamp.from(odt.toInstant())

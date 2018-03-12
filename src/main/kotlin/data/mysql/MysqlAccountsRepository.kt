@@ -74,7 +74,7 @@ class MysqlAccountsRepository(private val sql2o: Sql2o) : IAccountsRepository {
     }
 
     override fun setUserAuthToken(id: Int, token: String): User {
-        val sql = "UPDATE users SET authtoken=:authToken WHERE user_id=:userId"
+        val sql = "UPDATE users SET auth_token=:authToken WHERE user_id=:userId"
 
         sql2o.openAndUse { conn ->
             conn.createQuery(sql)
@@ -92,14 +92,18 @@ UPDATE users
 SET
     username=:username,
     password=:password,
-    authtoken=:authtoken
+    auth_token=:authToken,
+    email=:email
 WHERE
-    userId=:user.Id
+    user_id=:userId
 """
 
         sql2o.open().createQuery(sql).use { query ->
             query.addParameter("username", user.name)
                 .addParameter("password", user.password)
+                .addParameter("authToken", user.authToken)
+                .addParameter("email", user.email)
+                .addParameter("userId", user.id)
                 .executeUpdate()
         }
 
@@ -122,7 +126,7 @@ WHERE
 
     override fun isUserInOrganization(userId: Int, organizationId: Int): Boolean {
         val sql = """
-SELECT COUNT(userId) FROM `organization_relationships` WHERE user_id=:userId AND organization_id=:organizationId
+SELECT COUNT(user_id) FROM `organization_relationships` WHERE user_id=:userId AND organization_id=:organizationId
 """
 
         val count = sql2o.openAndUse {

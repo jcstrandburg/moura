@@ -19,7 +19,7 @@ class CreateProjectComment(
 ) : JsonAction(authenticationService) {
     override fun doHandle(ctx: Context): JsonResult {
         val projectId = ctx.param("projectId")?.toIntOrNull() ?: return BadRequest()
-        val project = projectRepository.getProject(projectId) ?: return NotFound()
+        val project = projectRepository.getProjectById(projectId) ?: return NotFound()
 
         val organization = accountsReadRepository.getOrganization(project.organizationId)
             ?: throw Exception("Unable to locate organization $project.organizationId")
@@ -29,7 +29,7 @@ class CreateProjectComment(
 
         val createDto = fromBody<DiscussionCommentCreateDto>(ctx)
 
-        val message = discussionRepository.addDiscussionMessage(
+        val message = discussionRepository.createDiscussionMessage(
             DiscussionMessageCreate(project.discussionContextId, authenticatedUser.id, createDto.content))
 
         return Created(DiscussionCommentDto(

@@ -1,10 +1,10 @@
 package data.inmemory
 
+import data.util.AutoIncrementMemoryRepository
 import domain.discussion.DiscussionMessage
 import domain.discussion.DiscussionMessageCreate
 import domain.discussion.IDiscussionContextRepository
 import domain.discussion.IDiscussionRepository
-import data.util.AutoIncrementMemoryRepository
 import java.time.OffsetDateTime
 
 class InMemoryDiscussionRepository: IDiscussionRepository, IDiscussionContextRepository {
@@ -14,14 +14,14 @@ class InMemoryDiscussionRepository: IDiscussionRepository, IDiscussionContextRep
 
     override fun createContextId() = nextContextId++
 
-    override fun addDiscussionMessage(message: DiscussionMessageCreate): DiscussionMessage {
+    override fun createDiscussionMessage(message: DiscussionMessageCreate, createdTime: OffsetDateTime): DiscussionMessage {
         return messages.insert { id ->
             DiscussionMessage(
                 id,
                 message.contextId,
                 message.userId,
                 message.content,
-                OffsetDateTime.now())
+                createdTime)
         }
     }
 
