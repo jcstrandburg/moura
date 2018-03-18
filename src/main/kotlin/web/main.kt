@@ -32,7 +32,6 @@ import web.api.v1.actions.CreateProjectComment
 import web.api.v1.actions.CreateUser
 import web.api.v1.actions.GetCurrentUser
 import web.api.v1.actions.GetOrganizationByToken
-import web.api.v1.actions.GetOrganizationsForCurrentUser
 import web.api.v1.actions.GetProjectById
 import web.api.v1.actions.GetProjectComments
 import web.api.v1.actions.GetProjectsForOrganization
@@ -116,7 +115,6 @@ fun main(args: Array<String>) {
                 post<CreateUser>()
                 path("me/") {
                     get<GetCurrentUser>()
-                    get<GetOrganizationsForCurrentUser>("organizations")
                 }
                 get<GetUserById>(":userId")
             }
