@@ -3,15 +3,18 @@ import PropTypes from 'prop-types';
 
 import Header from 'components/Header.jsx';
 
+export default class App extends Component {
 
-const App = ({ user, signOut }) => 
+    doRender = ({ user, signOut }) => 
     <div>
         <Header user={user} signOut={signOut} />
         <div>
             Content goes here
         </div>
     </div>;
-export default App;
+
+    render = () => doRender(this.props);
+}
 
 App.propTypes = {
     signOut: PropTypes.func.isRequired,

@@ -7,6 +7,29 @@ import { LazyLoadRequestCache, LazyLoadDataService } from 'util/lazyLoad.js';
 import toDict from 'util/toDict.js'
 
 
+let mockUsers = toDict([
+    {
+        id: 0,
+        name: 'Mock User',
+    },
+    {
+        id: 1,
+        name: 'Demo User 1',
+    },
+    {
+        id: 2,
+        name: 'Bobbert Bobberson',
+    },
+    {
+        id: 3,
+        name: 'Sam Smith',
+    },
+    {
+        id: 4,
+        name: 'Jimbo Jimmerson',
+    },
+], it => it.id);
+
 const Mock = ({ children }) => <div>{children}</div>;
 Mock.propTypes = {
     mockName: PropTypes.string.isRequired
@@ -48,14 +71,15 @@ MockSelector.propTypes = {
     defaultMock: PropTypes.string
 }
 
-const MockViewer = () => 
+export default class MockViewer extends Component {
+    render = () =>
     <div>
         <Header user={mockUsers[0]} signOut={() => {}} />
         <MockSelector defaultMock="project-details">
             <Mock mockName="action-link">
-                <ActionLink text="Click Me" action={_ => alert('click')}/>
+                <ActionLink text="Click Me" action={() => alert('click')}/>
             </Mock>
             <Mock mockName="mock2">Mock2</Mock>
         </MockSelector>
     </div>;
-export default MockViewer;
+}

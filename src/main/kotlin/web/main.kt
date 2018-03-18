@@ -24,6 +24,7 @@ import vulcan.Lifecycle
 import web.actions.GetSignInForm
 import web.actions.PostSignInForm
 import web.actions.ServeApp
+import web.actions.ServeMock
 import web.actions.SignOut
 import web.api.v1.actions.CreateOrganization
 import web.api.v1.actions.CreateProject
@@ -106,6 +107,9 @@ fun main(args: Array<String>) {
         get<SignOut>("/signout")
         path("/app/") {
             get<ServeApp>()
+        }
+        path("/mock") {
+            get<ServeMock>()
         }
         path ("/api/v1/") {
             path("users/") {
