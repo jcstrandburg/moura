@@ -1,6 +1,8 @@
 package integrationtests.database
 
+import domain.Change
 import domain.accounts.IAccountsRepository
+import domain.accounts.UserChangeSet
 import junit.framework.TestCase
 import java.util.*
 
@@ -17,28 +19,20 @@ class MySqlAccountsRepositoryTests : TestCase() {
     fun `test update user`() {
         val user = DatabaseObjectMother.createTestUser()
 
-        val userUpdate = user.copy(
+        val userUpdate = UserChangeSet(
             name = user.name+"!",
-            email = "test"+user.email,
-            password = user.password+"!")
-        val updatedUser = accountsRepository.updateUser(userUpdate)
-        assertNotNull(updatedUser)
-        assertEquals(userUpdate, updatedUser)
+            alias = "test"+user.alias,
+            password = user.password+"!",
+            authToken = Change(UUID.randomUUID().toString()))
+        val updatedUser = accountsRepository.updateUser(user.id, userUpdate)!!
+
+        assertEquals(userUpdate.name, updatedUser.name)
+        assertEquals(userUpdate.alias, updatedUser.alias)
+        assertEquals(userUpdate.password, updatedUser.password)
+        assertEquals(userUpdate.authToken?.value, updatedUser.authToken)
 
         val fetchedUser = accountsRepository.getUserById(user.id)
-        assertEquals(userUpdate, fetchedUser)
-    }
-
-    fun `test set auth token`() {
-        val user = DatabaseObjectMother.createTestUser()
-        val token = UUID.randomUUID().toString()
-
-        val updatedUser = accountsRepository.setUserAuthToken(user.id, token)
-        assertNotNull(updatedUser)
-        assertEquals(token, updatedUser.authToken)
-
-        val fetchedUser = accountsRepository.getUserById(user.id)!!
-        assertEquals(token, fetchedUser.authToken)
+        assertEquals(updatedUser, fetchedUser)
     }
 
     fun `test create and get organization`() {

@@ -1,5 +1,8 @@
 package domain.accounts
 
+import domain.Change
+import domain.ChangeSet
+
 data class User(
     val id: Int,
     val name: String,
@@ -7,6 +10,13 @@ data class User(
     val authToken: String?,
     val alias: String,
     val email: String)
+
+class UserChangeSet(
+    val name: String? = null,
+    val password: String? = null,
+    val alias: String? = null,
+    val authToken: Change<String?>? = null)
+    : ChangeSet<User>()
 
 data class UserCreate(
     val name: String,
@@ -36,8 +46,7 @@ interface IAccountsReadRepository {
 interface IAccountsRepository : IAccountsReadRepository {
     fun createOrganization(org: OrganizationCreate): Organization
     fun createUser(user: UserCreate): User
-    fun setUserAuthToken(id: Int, token: String): User
-    fun updateUser(user: User): User?
+    fun updateUser(userId: Int, changeSet: UserChangeSet): User?
     fun addUserToOrganization(userId: Int, organizationId: Int)
     fun removeUserFromOrganization(userId: Int, organizationId: Int)
 }

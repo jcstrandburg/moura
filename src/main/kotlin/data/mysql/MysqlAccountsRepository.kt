@@ -1,16 +1,21 @@
 package data.mysql
 
+import domain.Change
+import domain.ChangeSet
 import domain.accounts.IAccountsRepository
 import domain.accounts.Organization
 import domain.accounts.OrganizationCreate
 import domain.accounts.User
+import domain.accounts.UserChangeSet
 import domain.accounts.UserCreate
 import org.sql2o.Sql2o
 import skl2o.PrimaryKey
 import skl2o.TableName
+import skl2o.addParameters
 import skl2o.executeAndFetchAs
 import skl2o.executeScalarAs
 import skl2o.mySqlFields
+import skl2o.mySqlUpdateStatement
 import skl2o.openAndUse
 import skl2o.simpleDelete
 import skl2o.simpleInsert
@@ -73,41 +78,19 @@ class MysqlAccountsRepository(private val sql2o: Sql2o) : IAccountsRepository {
         return dbUser?.toDomain()
     }
 
-    override fun setUserAuthToken(id: Int, token: String): User {
-        val sql = "UPDATE users SET auth_token=:authToken WHERE user_id=:userId"
-
-        sql2o.openAndUse { conn ->
-            conn.createQuery(sql)
-                .addParameter("userId", id)
-                .addParameter("authToken", token)
-                .executeUpdate()
+    override fun updateUser(userId: Int, changeSet: UserChangeSet): User? {
+        val changes = DbUserChangeSet.from(changeSet).getChanges()
+        if (changes.any()) {
+            sql2o.openAndUse { conn ->
+                val sql = mySqlUpdateStatement(changes, "users", "user_id=:userId")
+                conn.createQuery(sql)
+                    .addParameters(changes)
+                    .addParameter("userId", userId)
+                    .executeUpdate()
+            }
         }
 
-        return getUserById(id) ?: throw NoSuchElementException()
-    }
-
-    override fun updateUser(user: User): User? {
-        val sql = """
-UPDATE users
-SET
-    username=:username,
-    password=:password,
-    auth_token=:authToken,
-    email=:email
-WHERE
-    user_id=:userId
-"""
-
-        sql2o.open().createQuery(sql).use { query ->
-            query.addParameter("username", user.name)
-                .addParameter("password", user.password)
-                .addParameter("authToken", user.authToken)
-                .addParameter("email", user.email)
-                .addParameter("userId", user.id)
-                .executeUpdate()
-        }
-
-        return getUserById(user.id)
+        return getUserById(userId)
     }
 
     override fun addUserToOrganization(userId: Int, organizationId: Int) {
@@ -117,8 +100,8 @@ WHERE
     }
 
     override fun removeUserFromOrganization(userId: Int, organizationId: Int) {
-        sql2o.openAndUse {
-            it.simpleDelete<DbOrganizationRelationship>(
+        sql2o.openAndUse { conn ->
+            conn.simpleDelete<DbOrganizationRelationship>(
                 "user_id=:userId AND organization_id=:organizationId",
                 mapOf("userId" to userId, "organizationId" to organizationId))
         }
@@ -129,8 +112,8 @@ WHERE
 SELECT COUNT(user_id) FROM `organization_relationships` WHERE user_id=:userId AND organization_id=:organizationId
 """
 
-        val count = sql2o.openAndUse {
-            it.createQuery(sql)
+        val count = sql2o.openAndUse { conn ->
+            conn.createQuery(sql)
                 .addParameter("userId", userId)
                 .addParameter("organizationId", organizationId)
                 .executeScalarAs<Long>()
@@ -184,6 +167,19 @@ WHERE r.organization_id=:organizationId
         val alias: String,
         val authToken:String?,
         val email: String)
+
+    class DbUserChangeSet(
+        val username: String? = null,
+        val password: String? = null,
+        val alias: String? = null,
+        val authToken: Change<String?>? = null)
+        : ChangeSet<DbUser>() {
+
+        companion object {
+            fun from(src: UserChangeSet): DbUserChangeSet =
+                DbUserChangeSet(src.name, src.password, src.alias, src.authToken)
+        }
+    }
 
     @TableName("users")
     data class DbUserCreate (

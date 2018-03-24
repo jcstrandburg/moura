@@ -5,6 +5,7 @@ import domain.accounts.IAccountsRepository
 import domain.accounts.Organization
 import domain.accounts.OrganizationCreate
 import domain.accounts.User
+import domain.accounts.UserChangeSet
 import domain.accounts.UserCreate
 
 class InMemoryAccountsRepository : IAccountsRepository {
@@ -22,18 +23,12 @@ class InMemoryAccountsRepository : IAccountsRepository {
     override fun getUserById(id: Int): User? =
         users.get(id)
 
-    override fun setUserAuthToken(id: Int, token: String): User {
-        val user = users.get(id)!!.copy(authToken = token)
-        users.replace(id, user)
-        return user
-    }
+    override fun updateUser(userId: Int, changeSet: UserChangeSet): User? {
+        val existingUser = users.get(userId) ?: return null
 
-    override fun updateUser(user: User): User? {
-        if (!users.containsId(user.id))
-            return null
-
-        users.replace(user.id, user)
-        return user
+        val updatedUser = changeSet.applyTo(existingUser)
+        users.replace(userId, updatedUser)
+        return updatedUser
     }
 
     override fun getUsersForOrganization(organizationId: Int): List<User> =

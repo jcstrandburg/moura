@@ -1,7 +1,9 @@
 package services
 
+import domain.Change
 import domain.accounts.IAccountsRepository
 import domain.accounts.User
+import domain.accounts.UserChangeSet
 import io.javalin.Context
 import io.javalin.builder.CookieBuilder
 import java.util.*
@@ -37,21 +39,24 @@ class AuthenticationService(val context: Context, val accountRepository: IAccoun
         val user = accountRepository.getUserByEmail(email) ?: return null
 
         if (passwordHasher.checkPassword(plainPassword, user.password)) {
-            val userWithAuthToken = accountRepository.setUserAuthToken(user.id, UUID.randomUUID().toString())
-
+            val changeSet = UserChangeSet(authToken = Change(UUID.randomUUID().toString()))
+            val userWithAuthToken = accountRepository.updateUser(user.id, changeSet)!!
             setCookie(USER_ID_COOKIE, userWithAuthToken.id.toString())
             setCookie(AUTH_TOKEN_COOKIE, userWithAuthToken.authToken!!)
-
             authenticatedUser = userWithAuthToken
         }
+
         return authenticatedUser
     }
 
     fun hashPassword(plainPassword: String) = passwordHasher.hashPassword(plainPassword)
 
     fun logOutUser() {
+        val authenticatedUserId = authenticatedUser?.id ?: return
+        accountRepository.updateUser(authenticatedUserId, UserChangeSet(authToken = Change(null)))
         unsetCookie(USER_ID_COOKIE)
         unsetCookie(AUTH_TOKEN_COOKIE)
+        authenticatedUser = null
     }
 
     fun setLogInSuccessRedirectUri(uri: String) = setCookie(LOG_IN_REDIRECT_COOKIE, uri)

@@ -84,6 +84,12 @@ fun mySqlUpdateStatement(kclass: KClass<*>, tableName: String, key: String): Str
     return "UPDATE `$tableName` SET ${assignments.sorted().joinToString(",")} WHERE ${toMySqlCasing(key)}=:$key"
 }
 
+/** Generates a full mysql update statement for a table from a list of field names */
+fun mySqlUpdateStatement(changes: Map<String, Any?>, tableName: String, condition: String): String {
+    val assignments = changes.keys.map { "${toMySqlCasing(it)}=:$it" }
+    return "UPDATE `$tableName` SET ${assignments.sorted().joinToString(",")} WHERE $condition"
+}
+
 /** Generates a full mysql select statement for a table with given name, shape, and condition */
 inline fun <reified T: Any> mySqlSelectStatement(tableName: String, condition: String) = mySqlSelectStatement(T::class, tableName, condition)
 inline fun <reified T: Any> mySqlSelectStatement(condition: String) = mySqlSelectStatement(T::class, getTableName(T::class), condition)
@@ -104,6 +110,13 @@ fun <T: Any> Query.executeAndFetchAs(kclass: KClass<T>) = executeAndFetch(kclass
 
 /** Extension method that makes it possible to use Sql2o without annoying ::class.java boilerplate */
 inline fun <reified T: Any> Query.executeAndFetchFirstAs(): T? = executeAndFetchFirst(T::class.java)
+
+fun Query.addParameters(params: Map<String, Any?>): Query {
+    params.forEach {
+        addParameter(it.key, it.value)
+    }
+    return this
+}
 
 /** Extension method that allows for adding multiple parameters from an object */
 inline fun <reified T: Any> Query.addParameters(params: T) = addParameters(T::class, params)
