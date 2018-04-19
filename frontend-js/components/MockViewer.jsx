@@ -3,9 +3,10 @@ import PropTypes from 'prop-types';
 
 import Header from 'components/Header.jsx';
 import ActionLink from 'components/ActionLink.jsx';
+import DiscussionThread, { Message } from 'components/DiscussionThread.jsx';
+import PrettyDate from 'components/PrettyDate.jsx';
 import { LazyLoadRequestCache, LazyLoadDataService } from 'util/lazyLoad.js';
-import toDict from 'util/toDict.js'
-
+import toDict from 'util/toDict.js';
 
 let mockUsers = toDict([
     {
@@ -71,15 +72,31 @@ MockSelector.propTypes = {
     defaultMock: PropTypes.string
 }
 
+let now = new Date();
+let yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+let lastYear = new Date();
+lastYear.setFullYear(lastYear.getFullYear() - 1);
+
 export default class MockViewer extends Component {
     render = () =>
     <div>
         <Header user={mockUsers[0]} signOut={() => {}} />
-        <MockSelector defaultMock="project-details">
+        <MockSelector defaultMock="DiscussionThreadMessage">
             <Mock mockName="action-link">
                 <ActionLink text="Click Me" action={() => alert('click')}/>
             </Mock>
-            <Mock mockName="mock2">Mock2</Mock>
+            <Mock mockName="PrettyDate">
+                <div><PrettyDate date={now}/></div>
+                <div><PrettyDate date={yesterday}/></div>
+                <div><PrettyDate date={lastYear}/></div>
+            </Mock>
+            <Mock mockName="DiscussionThreadMessage">
+                <Message message={{ user: mockUsers[0], createdTime: new Date('2018-03-24T10:20:48Z'), content: "Ideations" }} />
+            </Mock>
+            <Mock mockName="DiscussionThread">
+                <DiscussionThread messages={[]}/>
+            </Mock>
         </MockSelector>
     </div>;
 }
