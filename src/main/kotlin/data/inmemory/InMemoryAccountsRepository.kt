@@ -3,10 +3,10 @@ package data.inmemory
 import data.util.AutoIncrementMemoryRepository
 import domain.accounts.IAccountsRepository
 import domain.accounts.Organization
-import domain.accounts.OrganizationCreate
+import domain.accounts.OrganizationCreateSet
 import domain.accounts.User
 import domain.accounts.UserChangeSet
-import domain.accounts.UserCreate
+import domain.accounts.UserCreateSet
 
 class InMemoryAccountsRepository : IAccountsRepository {
 
@@ -14,7 +14,7 @@ class InMemoryAccountsRepository : IAccountsRepository {
     private val organizations = AutoIncrementMemoryRepository<Organization>()
     private val userIdsByOrgId = HashMap<Int, HashSet<Int>>()
 
-    override fun createUser(user: UserCreate): User =
+    override fun createUser(user: UserCreateSet): User =
         users.insert { id -> User(id, user.name, user.password, null, user.alias, user.email) }
 
     override fun getUserByEmail(email: String): User? =
@@ -63,7 +63,7 @@ class InMemoryAccountsRepository : IAccountsRepository {
     override fun getOrganization(token: String): Organization? =
         organizations.entities.singleOrNull { it.token == token }
 
-    override fun createOrganization(org: OrganizationCreate): Organization =
+    override fun createOrganization(org: OrganizationCreateSet): Organization =
         organizations.insert { id -> Organization(id, org.name, org.token) }
 
     override fun getOrganizationsForUser(userId: Int): List<Organization> {

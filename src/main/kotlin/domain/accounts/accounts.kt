@@ -18,7 +18,7 @@ class UserChangeSet(
     val authToken: Change<String?>? = null)
     : ChangeSet<User>()
 
-data class UserCreate(
+data class UserCreateSet(
     val name: String,
     val password: String,
     val alias: String,
@@ -29,7 +29,7 @@ data class Organization(
     val name: String,
     val token: String)
 
-data class OrganizationCreate(
+data class OrganizationCreateSet(
     val name: String,
     val token: String)
 
@@ -44,8 +44,8 @@ interface IAccountsReadRepository {
 }
 
 interface IAccountsRepository : IAccountsReadRepository {
-    fun createOrganization(org: OrganizationCreate): Organization
-    fun createUser(user: UserCreate): User
+    fun createOrganization(org: OrganizationCreateSet): Organization
+    fun createUser(user: UserCreateSet): User
     fun updateUser(userId: Int, changeSet: UserChangeSet): User?
     fun addUserToOrganization(userId: Int, organizationId: Int)
     fun removeUserFromOrganization(userId: Int, organizationId: Int)

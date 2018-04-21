@@ -11,14 +11,13 @@ import data.inmemory.InMemoryDiscussionRepository
 import data.inmemory.InMemoryProjectRepository
 import domain.accounts.IAccountsReadRepository
 import domain.accounts.IAccountsRepository
-import domain.accounts.UserCreate
+import domain.accounts.UserCreateSet
 import domain.discussion.IDiscussionRepository
 import domain.projects.IProjectRepository
-import io.javalin.Context
 import io.javalin.Javalin
 import io.javalin.embeddedserver.Location
-import org.mindrot.jbcrypt.BCrypt
 import services.AuthenticationService
+import services.BcryptPasswordHasher
 import vulcan.Container
 import vulcan.Lifecycle
 import web.actions.GetSignInForm
@@ -53,31 +52,22 @@ fun main(args: Array<String>) {
     container.register<AuthenticationService, AuthenticationService>(Lifecycle.PerContainer)
 
     val accountsRepository = container.get<IAccountsRepository>()
+    val passwordHasher = container.get<BcryptPasswordHasher>()
 
-    val hash = { password: String -> BCrypt.hashpw(password, BCrypt.gensalt(12))!! }
-
-    accountsRepository.createUser(UserCreate(
+    accountsRepository.createUser(UserCreateSet(
         name = "Bob Bobberton",
-        password = hash("password"),
+        password = passwordHasher.hashPassword("password"),
         alias = "Bob",
         email = "bob@example.com"))
-    accountsRepository.createUser(UserCreate(
+    accountsRepository.createUser(UserCreateSet(
         name = "Jim Jameson",
-        password = hash("password"),
+        password = passwordHasher.hashPassword("password"),
         alias = "Jimothy",
         email = "jim@example.com"))
 
     val app = Javalin.create()
 
     app.enableStaticFiles("""C:\code\moura\src\main\resources\static\""", Location.EXTERNAL)
-
-    fun getActionForRouter(ctx: Context, kclass: KClass<*>): Any {
-
-        val nestedContainer = container.getNestedContainer()
-        nestedContainer.register(ctx)
-
-        return nestedContainer.get(kclass)
-    }
 
     val klaxon = Klaxon()
         .converter(object: Converter<OffsetDateTime> {
@@ -97,7 +87,12 @@ fun main(args: Array<String>) {
         }
     })
 
-    val router = Router(doGetAction = ::getActionForRouter)
+    val router = Router(doGetAction = { ctx, kclass ->
+        val nestedContainer = container.getNestedContainer()
+        nestedContainer.register(ctx)
+        nestedContainer.get(kclass)
+    })
+
     router.routes(app) {
         path("/signin") {
             get<GetSignInForm>()

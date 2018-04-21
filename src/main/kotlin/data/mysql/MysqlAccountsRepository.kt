@@ -4,10 +4,10 @@ import domain.Change
 import domain.ChangeSet
 import domain.accounts.IAccountsRepository
 import domain.accounts.Organization
-import domain.accounts.OrganizationCreate
+import domain.accounts.OrganizationCreateSet
 import domain.accounts.User
 import domain.accounts.UserChangeSet
-import domain.accounts.UserCreate
+import domain.accounts.UserCreateSet
 import org.sql2o.Sql2o
 import skl2o.PrimaryKey
 import skl2o.TableName
@@ -35,7 +35,7 @@ class MysqlAccountsRepository(private val sql2o: Sql2o) : IAccountsRepository {
         }
     }
 
-    override fun createOrganization(org: OrganizationCreate): Organization {
+    override fun createOrganization(org: OrganizationCreateSet): Organization {
         val id = sql2o.openAndUse { conn ->
             conn.simpleInsert(DbOrganizationCreate(org.name, org.token))
         }
@@ -57,7 +57,7 @@ class MysqlAccountsRepository(private val sql2o: Sql2o) : IAccountsRepository {
         return dbOrganizations.map { it.toDomain() }
     }
 
-    override fun createUser(user: UserCreate): User {
+    override fun createUser(user: UserCreateSet): User {
         val userId = sql2o.openAndUse { conn ->
             conn.simpleInsert(DbUserCreate(user.name, user.password, user.alias, user.email))
         }

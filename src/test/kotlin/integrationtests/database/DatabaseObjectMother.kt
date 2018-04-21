@@ -4,9 +4,9 @@ import data.mysql.MysqlAccountsRepository
 import data.mysql.MysqlDiscussionRepository
 import data.mysql.MysqlProjectRepository
 import domain.accounts.Organization
-import domain.accounts.OrganizationCreate
+import domain.accounts.OrganizationCreateSet
 import domain.accounts.User
-import domain.accounts.UserCreate
+import domain.accounts.UserCreateSet
 import domain.discussion.DiscussionMessage
 import domain.discussion.DiscussionMessageCreate
 import domain.projects.Project
@@ -35,7 +35,7 @@ class DatabaseObjectMother {
         fun createTestUser(): User {
             val uuid = UUID.randomUUID()
 
-            val userCreate = UserCreate(
+            val userCreate = UserCreateSet(
                 name = uuid.toString(),
                 password = "pathword",
                 alias = "bob loblaw",
@@ -54,7 +54,7 @@ class DatabaseObjectMother {
         fun createTestOrganization(): Organization {
             val uuid = UUID.randomUUID()
 
-            val organizationCreate = OrganizationCreate(name = uuid.toString(), token = uuid.toString())
+            val organizationCreate = OrganizationCreateSet(name = uuid.toString(), token = uuid.toString())
             val organization = accountsRepository.createOrganization(organizationCreate)
 
             TestCase.assertEquals(organizationCreate.name, organization.name)

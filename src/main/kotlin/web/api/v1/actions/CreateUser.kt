@@ -3,7 +3,7 @@ package web.api.v1.actions
 import adr.JsonAction
 import adr.JsonResult
 import domain.accounts.IAccountsRepository
-import domain.accounts.UserCreate
+import domain.accounts.UserCreateSet
 import io.javalin.Context
 import services.AuthenticationService
 import web.api.v1.UserCreateDto
@@ -24,7 +24,7 @@ class CreateUser(
     override fun doHandle(ctx: Context): JsonResult {
         val body = fromBody<UserCreateDto>(ctx)
 
-        val userCreate = UserCreate(
+        val userCreate = UserCreateSet(
             name = body.name,
             password = body.password,
             alias = body.alias,

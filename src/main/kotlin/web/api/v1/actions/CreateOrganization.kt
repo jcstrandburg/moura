@@ -3,7 +3,7 @@ package web.api.v1.actions
 import adr.JsonAction
 import adr.JsonResult
 import domain.accounts.IAccountsRepository
-import domain.accounts.OrganizationCreate
+import domain.accounts.OrganizationCreateSet
 import io.javalin.Context
 import services.AuthenticationService
 import web.api.v1.OrganizationCreateDto
@@ -16,7 +16,7 @@ class CreateOrganization(
     override fun doHandle(ctx: Context): JsonResult {
 
         val organizationCreate = fromBody<OrganizationCreateDto>(ctx)
-        val organization = OrganizationCreate(
+        val organization = OrganizationCreateSet(
             name = organizationCreate.organization.name,
             token = organizationCreate.organization.token)
 
