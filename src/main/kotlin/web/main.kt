@@ -6,16 +6,16 @@ import com.beust.klaxon.Converter
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.JsonValue
 import com.beust.klaxon.Klaxon
-import data.inmemory.InMemoryAccountsRepository
-import data.inmemory.InMemoryDiscussionRepository
-import data.inmemory.InMemoryProjectRepository
+import data.mysql.MysqlAccountsRepository
+import data.mysql.MysqlDiscussionRepository
+import data.mysql.MysqlProjectRepository
 import domain.accounts.IAccountsReadRepository
 import domain.accounts.IAccountsRepository
-import domain.accounts.UserCreateSet
 import domain.discussion.IDiscussionRepository
 import domain.projects.IProjectRepository
 import io.javalin.Javalin
 import io.javalin.embeddedserver.Location
+import org.sql2o.Sql2o
 import services.AuthenticationService
 import services.BcryptPasswordHasher
 import vulcan.Container
@@ -44,26 +44,15 @@ fun main(args: Array<String>) {
 
     val container = Container()
 
-    container.register { InMemoryAccountsRepository() }
-    container.register<IAccountsReadRepository, InMemoryAccountsRepository>()
-    container.register<IAccountsRepository, InMemoryAccountsRepository>()
-    container.register<IProjectRepository, InMemoryProjectRepository>()
-    container.register<IDiscussionRepository, InMemoryDiscussionRepository>()
+    container.register { Sql2o("jdbc:mysql://localhost:3306/moura", "root", "jimbolina") }
+    container.register<IAccountsReadRepository, IAccountsRepository>()
+    container.register<IAccountsRepository, MysqlAccountsRepository>()
+    container.register<IProjectRepository, MysqlProjectRepository>()
+    container.register<IDiscussionRepository, MysqlDiscussionRepository>()
     container.register<AuthenticationService, AuthenticationService>(Lifecycle.PerContainer)
 
     val accountsRepository = container.get<IAccountsRepository>()
     val passwordHasher = container.get<BcryptPasswordHasher>()
-
-    accountsRepository.createUser(UserCreateSet(
-        name = "Bob Bobberton",
-        password = passwordHasher.hashPassword("password"),
-        alias = "Bob",
-        email = "bob@example.com"))
-    accountsRepository.createUser(UserCreateSet(
-        name = "Jim Jameson",
-        password = passwordHasher.hashPassword("password"),
-        alias = "Jimothy",
-        email = "jim@example.com"))
 
     val app = Javalin.create()
 
@@ -75,7 +64,7 @@ fun main(args: Array<String>) {
             override fun fromJson(jv: JsonValue): OffsetDateTime = OffsetDateTime.parse(jv.string)
         })
 
-    JsonAction.configureSerializer( object: JsonAction.Serializer {
+    JsonAction.configureSerializer(object: JsonAction.Serializer {
         override fun <T : Any> toJson(value: T) = klaxon.toJsonString(value)
 
         @Suppress("UNCHECKED_CAST")
@@ -87,13 +76,10 @@ fun main(args: Array<String>) {
         }
     })
 
-    val router = Router(doGetAction = { ctx, kclass ->
-        val nestedContainer = container.getNestedContainer()
-        nestedContainer.register(ctx)
-        nestedContainer.get(kclass)
-    })
-
-    router.routes(app) {
+    Router { ctx, kclass ->
+        container.getNestedContainer().register(ctx).get(kclass)
+    }
+    .routes(app) {
         path("/signin") {
             get<GetSignInForm>()
             post<PostSignInForm>()
