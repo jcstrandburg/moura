@@ -1,3 +1,5 @@
+import { Set } from "core-js";
+
 export const defaultHeaders = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
@@ -31,7 +33,25 @@ export default class JsonClient {
             : defaultHeaders);
     }
 
-    processRequest(uri, method, body = null) {
+    buildUri(baseUri, params = {}) {
+        const re = /\{([a-zA-Z0-9]*)\}/g;
+
+        let pathParamsSet = new Set((baseUri.match(re) || []).map(it => it.substr(1, it.length - 2)));
+
+        let pathString = baseUri.replace(re, (match, offset, string) => {
+            return encodeURIComponent(params[match.substr(1, match.length - 2)]);
+        });
+
+        let queryString = Object.keys(params)
+            .filter(key => !pathParamsSet.has(key))
+            .filter(key => params[key] != null && params[key] != undefined)
+            .map(key => key + '=' + encodeURIComponent(params[key]))
+            .join('&');
+
+        return queryString.length > 0 ? pathString + '?' + queryString : pathString;
+    }
+
+    processRequest(uri, params, method, body = null) {
         let fetchOptions = {
             credentials: "same-origin",
             method: method,
@@ -40,14 +60,14 @@ export default class JsonClient {
         }
 
         let f = this.customFetch || fetch;
-        return f(uri, fetchOptions).then(response => new WrappedResponse(response));
+        return f(this.buildUri(uri, params), fetchOptions).then(response => new WrappedResponse(response));
     }
 
-    get(uri) {
-        return this.processRequest(uri, 'GET');
+    get(uri, params) {
+        return this.processRequest(uri, params, 'GET');
     }
 
-    post(route, body) {
-        return this.processRequest(route, 'POST', JSON.stringify(body));
+    post(uri, params, body) {
+        return this.processRequest(uri, params, 'POST', JSON.stringify(body));
     }
 }
