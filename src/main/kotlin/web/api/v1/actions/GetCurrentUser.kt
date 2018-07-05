@@ -20,7 +20,7 @@ class GetCurrentUser(
         val organizations = organizationRepository.getOrganizationsForUser(user.id)
 
         return Ok(CurrentUserDto(
-            UserDto(id = user.id, name = user.name, alias = user.alias),
+            UserDto(id = user.id, name = user.name, alias = user.alias, token = user.token),
             organizations.map { OrganizationSummaryDto(id = it.id, name = it.name, token = it.token) }
         ))
     }

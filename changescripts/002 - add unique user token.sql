@@ -1,0 +1,11 @@
+USE moura;
+
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+START TRANSACTION;
+
+ALTER TABLE `users` ADD COLUMN `token` varchar(40) NULL;
+UPDATE `users` SET `token` = uuid();
+ALTER TABLE `users` MODIFY COLUMN `token` varchar(40) NOT NULL;
+ALTER TABLE `users` ADD UNIQUE(`token`);
+
+COMMIT;

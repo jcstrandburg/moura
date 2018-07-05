@@ -9,7 +9,8 @@ data class User(
     val password: String,
     val authToken: String?,
     val alias: String,
-    val email: String)
+    val email: String,
+    val token: String)
 
 class UserChangeSet(
     val name: String? = null,
@@ -22,7 +23,8 @@ data class UserCreateSet(
     val name: String,
     val password: String,
     val alias: String,
-    val email: String)
+    val email: String,
+    val token: String)
 
 data class Organization(
     val id: Int,
@@ -39,6 +41,7 @@ interface IAccountsReadRepository {
     fun getOrganizationsForUser(userId: Int): List<Organization>
     fun getUserByEmail(email: String): User?
     fun getUserById(id: Int): User?
+    fun getUserByToken(token: String): User?
     fun getUsersForOrganization(organizationId: Int): List<User>
     fun isUserInOrganization(userId: Int, organizationId: Int): Boolean
 }

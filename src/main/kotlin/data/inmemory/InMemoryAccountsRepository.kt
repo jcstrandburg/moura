@@ -7,21 +7,24 @@ import domain.accounts.OrganizationCreateSet
 import domain.accounts.User
 import domain.accounts.UserChangeSet
 import domain.accounts.UserCreateSet
+import java.util.*
 
 class InMemoryAccountsRepository : IAccountsRepository {
-
     private val users = AutoIncrementMemoryRepository<User>()
     private val organizations = AutoIncrementMemoryRepository<Organization>()
     private val userIdsByOrgId = HashMap<Int, HashSet<Int>>()
 
     override fun createUser(user: UserCreateSet): User =
-        users.insert { id -> User(id, user.name, user.password, null, user.alias, user.email) }
+        users.insert { id -> User(id, user.name, user.password, null, user.alias, user.email, user.token) }
 
     override fun getUserByEmail(email: String): User? =
         users.entities.singleOrNull { it.email == email }
 
     override fun getUserById(id: Int): User? =
         users.get(id)
+
+    override fun getUserByToken(token: String): User? =
+        users.entities.singleOrNull { it.token == token }
 
     override fun updateUser(userId: Int, changeSet: UserChangeSet): User? {
         val existingUser = users.get(userId) ?: return null

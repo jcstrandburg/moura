@@ -49,16 +49,19 @@ class MysqlAccountsRepository(private val sql2o: Sql2o) : IAccountsRepository {
     }.map { it.toDomain() }
 
     override fun createUser(user: UserCreateSet): User {
-        val userId = sql2o.openAndApply { simpleInsert(DbUserCreate(user.name, user.password, user.alias, user.email)) }
+        val userId = sql2o.openAndApply { simpleInsert(DbUserCreate(user.name, user.password, user.alias, user.email, user.token)) }
         return getUserById(userId)!!
     }
 
     override fun getUserByEmail(email: String): User? = sql2o.openAndApply {
-        simpleSelect<DbUser>("email=:email", mapOf("email" to email))
-            .singleOrNull()
+        simpleSelect<DbUser>("email=:email", mapOf("email" to email)).singleOrNull()
     }?.toDomain()
 
     override fun getUserById(id: Int): User? = sql2o.openAndApply { simpleSelectByPrimaryKey<DbUser>(id) }?.toDomain()
+
+    override fun getUserByToken(token: String): User? = sql2o.openAndApply {
+        simpleSelect<DbUser>("token=:token", mapOf("token" to token)).singleOrNull()
+    }?.toDomain()
 
     override fun updateUser(userId: Int, changeSet: UserChangeSet): User? {
         val changes = DbUserChangeSet.from(changeSet).getChanges()
@@ -108,7 +111,7 @@ WHERE r.organization_id=:organizationId
 
     companion object {
         private fun DbUser.toDomain() =
-            User(this.userId, this.username, this.password, this.authToken ?: "", this.alias, this.email)
+            User(this.userId, this.username, this.password, this.authToken ?: "", this.alias, this.email, this.token)
 
         private fun DbOrganization.toDomain() = Organization(this.organizationId, this.name, this.token)
     }
@@ -133,7 +136,8 @@ WHERE r.organization_id=:organizationId
         val password: String,
         val alias: String,
         val authToken:String?,
-        val email: String)
+        val email: String,
+        val token: String)
 
     class DbUserChangeSet(
         val username: String? = null,
@@ -153,7 +157,8 @@ WHERE r.organization_id=:organizationId
         val username: String,
         val password: String,
         val alias: String,
-        val email: String)
+        val email: String,
+        val token: String)
 
     @TableName("organizations")
     data class DbOrganization(

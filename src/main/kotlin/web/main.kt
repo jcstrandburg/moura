@@ -15,7 +15,6 @@ import io.javalin.Javalin
 import io.javalin.embeddedserver.Location
 import org.sql2o.Sql2o
 import services.AuthenticationService
-import services.BcryptPasswordHasher
 import vulcan.Container
 import vulcan.Lifecycle
 import web.actions.GetSignInForm
@@ -32,7 +31,7 @@ import web.api.v1.actions.GetOrganizationByToken
 import web.api.v1.actions.GetProjectById
 import web.api.v1.actions.GetProjectComments
 import web.api.v1.actions.GetProjectsForOrganization
-import web.api.v1.actions.GetUserById
+import web.api.v1.actions.GetUserByToken
 import java.io.StringReader
 import kotlin.reflect.KClass
 
@@ -46,9 +45,6 @@ fun main(args: Array<String>) {
     container.register<IProjectRepository, MysqlProjectRepository>()
     container.register<IDiscussionRepository, MysqlDiscussionRepository>()
     container.register<AuthenticationService, AuthenticationService>(Lifecycle.PerContainer)
-
-    val accountsRepository = container.get<IAccountsRepository>()
-    val passwordHasher = container.get<BcryptPasswordHasher>()
 
     val app = Javalin.create()
 
@@ -89,7 +85,7 @@ fun main(args: Array<String>) {
                 path("me/") {
                     get<GetCurrentUser>()
                 }
-                get<GetUserById>(":userId")
+                get<GetUserByToken>(":token")
             }
             path("orgs") {
                 post<CreateOrganization>()

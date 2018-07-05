@@ -39,7 +39,8 @@ class DatabaseObjectMother {
                 name = uuid.toString(),
                 password = "pathword",
                 alias = "bob loblaw",
-                email = "$uuid@example.com")
+                email = "$uuid@example.com",
+                token = uuid.toString())
 
             val createdUser = accountsRepository.createUser(userCreate)
 

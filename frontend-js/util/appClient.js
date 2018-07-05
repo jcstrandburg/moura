@@ -19,6 +19,12 @@ export default class AppClient {
             [httpCodes.OK]: user => user,
         }));
 
+    getUserByToken = () => this.jsonClient.get(this.apiBase + '/users/' + token)
+        .then(response => response.handle({
+            [httpCodes.OK]: user => user,
+            [httpCodes.NOTFOUND]: _ => null,
+        }));
+
     signOut() {
         let fetchOptions = {
             credentials: "same-origin",

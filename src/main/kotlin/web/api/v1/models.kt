@@ -2,7 +2,7 @@ package web.api.v1
 
 import java.time.ZonedDateTime
 
-data class UserDto(val id: Int, val name: String, val alias: String)
+data class UserDto(val id: Int, val name: String, val alias: String, val token: String)
 data class UserCreateDto(val name: String, val password: String, val alias: String, val email: String)
 data class CurrentUserDto(val user: UserDto, val organizations: Collection<OrganizationSummaryDto>)
 

@@ -8,6 +8,7 @@ import io.javalin.Context
 import services.AuthenticationService
 import web.api.v1.UserCreateDto
 import web.api.v1.UserDto
+import java.util.*
 
 class CreateUser(
     authenticationService: AuthenticationService,
@@ -28,12 +29,13 @@ class CreateUser(
             name = body.name,
             password = body.password,
             alias = body.alias,
-            email = body.email)
+            email = body.email,
+            token = UUID.randomUUID().toString())
 
         val createdUser = accountsRepository.createUser(userCreate)
         val authenticatedUser = authenticationService.logInUser(body.email, body.password)
             ?: throw Exception("Failed to authenticate user ${createdUser.id} after creating them")
 
-        return Ok(UserDto(id = authenticatedUser.id, name = authenticatedUser.name, alias = authenticatedUser.alias))
+        return Ok(UserDto(id = authenticatedUser.id, name = authenticatedUser.name, alias = authenticatedUser.alias, token = authenticatedUser.token))
     }
 }
