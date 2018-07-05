@@ -1,6 +1,6 @@
 package web.api.v1
 
-import java.time.OffsetDateTime
+import java.time.ZonedDateTime
 
 data class UserDto(val id: Int, val name: String, val alias: String)
 data class UserCreateDto(val name: String, val password: String, val alias: String, val email: String)
@@ -15,5 +15,5 @@ data class ProjectCreateDto(val project: ProjectSummaryDto)
 data class ProjectCollectionDto(val projects: List<ProjectSummaryDto>)
 
 data class DiscussionCommentCreateDto(val content: String)
-data class DiscussionCommentDto(val id: Int, val userId: Int, val content: String, val createdTime: OffsetDateTime)
+data class DiscussionCommentDto(val id: Int, val userId: Int, val content: String, val createdTime: ZonedDateTime)
 data class DiscussionCommentCollectionDto(val comments: List<DiscussionCommentDto>)

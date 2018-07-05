@@ -9,7 +9,7 @@ import skl2o.PrimaryKey
 import skl2o.TableName
 import skl2o.executeAndFetchAs
 import skl2o.mySqlSelectStatement
-import skl2o.openAndUse
+import skl2o.openAndApply
 import skl2o.simpleInsert
 import skl2o.simpleSelectByPrimaryKey
 
@@ -19,12 +19,12 @@ class MysqlProjectRepository(
 ): IProjectRepository {
 
     override fun getProjectById(projectId: Int): Project? =
-        sql2o.openAndUse { it.simpleSelectByPrimaryKey<DbProject>(projectId) }?.toDomain()
+        sql2o.openAndApply { simpleSelectByPrimaryKey<DbProject>(projectId) }?.toDomain()
 
     override fun createProject(project: ProjectCreate): Project {
         val discussionContextId = discussionContextService.createContextId()
-        val id = sql2o.openAndUse {
-            it.simpleInsert(DbProjectCreate(
+        val id = sql2o.openAndApply {
+            simpleInsert(DbProjectCreate(
                 project.name,
                 project.organizationId,
                 discussionContextId,
@@ -42,7 +42,9 @@ AND ${if (parentProjectId == null) "parent_project_id IS NULL" else "parent_proj
 
         val sql = mySqlSelectStatement<DbProject>(conditional)
 
-        val dbProjects = sql2o.open().createQuery(sql).use { query ->
+        return sql2o.openAndApply {
+            val query = createQuery(sql)
+
             if (parentProjectId == null) {
                 query
                     .addParameter("organizationId", organizationId)
@@ -52,10 +54,9 @@ AND ${if (parentProjectId == null) "parent_project_id IS NULL" else "parent_proj
                     .addParameter("organizationId", organizationId)
                     .addParameter("parentProjectId", parentProjectId)
             }
-            .executeAndFetchAs<DbProject>()
-        }
 
-        return dbProjects.map { it -> it.toDomain() }
+            query.executeAndFetchAs<DbProject>()
+        }.map { it.toDomain() }
     }
 
     companion object {

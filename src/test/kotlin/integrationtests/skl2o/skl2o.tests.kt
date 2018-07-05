@@ -8,34 +8,33 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import skl2o.getKeyAs
-import skl2o.openAndUse
+import skl2o.openAndApply
 import skl2o.simpleSelectByPrimaryKey
 import skl2o.toTimestamp
-import skl2o.toUtcOffsetDateTime
+import skl2o.toUtcZonedDateTime
 import java.sql.Timestamp
-import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.util.*
 
 @RunWith(Parameterized::class)
-class TestTimeConverters(val offsetDateTime: OffsetDateTime) : TestCase() {
+class TestTimeConverters(private val zonedDateTime: ZonedDateTime) : TestCase() {
 
     @Test
     fun testTimeConverters() {
-        sql2o.openAndUse { conn ->
-            val timestamp = toTimestamp(offsetDateTime)
-            val id = conn
-                .createQuery("INSERT INTO `$tableName` (`time`) VALUES (:time)")
+        sql2o.openAndApply {
+            val timestamp = zonedDateTime.toTimestamp()
+            val id = createQuery("INSERT INTO `$tableName` (`time`) VALUES (:time)")
                 .addParameter("time", timestamp)
                 .executeUpdate()
                 .getKeyAs<Int>()
 
-            val row = conn.simpleSelectByPrimaryKey(TestTable::class, tableName, "id", id)!!
-            val roundTripOffsetDateTime = toUtcOffsetDateTime(row.time)
+            val row = simpleSelectByPrimaryKey(TestTable::class, tableName, "id", id)!!
+            val roundTripOffsetDateTime = row.time.toUtcZonedDateTime()
 
             assertEquals(timestamp, row.time)
-            assertEquals(offsetDateTime.toInstant(), row.time.toInstant())
-            assertEquals(offsetDateTime.toInstant(), roundTripOffsetDateTime.toInstant())
+            assertEquals(zonedDateTime.toInstant(), row.time.toInstant())
+            assertEquals(zonedDateTime.toInstant(), roundTripOffsetDateTime.toInstant())
         }
     }
 
@@ -46,8 +45,8 @@ class TestTimeConverters(val offsetDateTime: OffsetDateTime) : TestCase() {
         @BeforeClass
         @JvmStatic
         fun setup() {
-            sql2o.openAndUse { conn ->
-                conn.createQuery("""
+            sql2o.openAndApply {
+                createQuery("""
 CREATE TABLE `$tableName` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `time` DATETIME(6) NOT NULL,
@@ -60,19 +59,19 @@ CREATE TABLE `$tableName` (
         @AfterClass
         @JvmStatic
         fun teardown() {
-            sql2o.openAndUse { conn ->
-                conn.createQuery("DROP TABLE `$tableName`").executeUpdate()
+            sql2o.openAndApply {
+                createQuery("DROP TABLE `$tableName`").executeUpdate()
             }
         }
 
         @JvmStatic
         @Parameterized.Parameters(name = "{0}")
-        fun testData(): Collection<Array<OffsetDateTime>> {
+        fun testData(): Collection<Array<ZonedDateTime>> {
             // test data deliberately has no nanoseconds values to avoid issues with milliseconds not surviving round trip to the db
             return listOf(
-                arrayOf(OffsetDateTime.of(2015, 10, 23, 12, 44, 43, 0, ZoneOffset.UTC)),
-                arrayOf(OffsetDateTime.of(2016, 5, 10, 23, 1, 55, 0, ZoneOffset.ofHours(-3))),
-                arrayOf(OffsetDateTime.of(2017, 7, 15, 15, 3, 12, 0, ZoneOffset.ofHours(6)))
+                arrayOf(ZonedDateTime.of(2015, 10, 23, 12, 44, 43, 0, ZoneOffset.UTC)),
+                arrayOf(ZonedDateTime.of(2016, 5, 10, 23, 1, 55, 0, ZoneOffset.ofHours(-3))),
+                arrayOf(ZonedDateTime.of(2017, 7, 15, 15, 3, 12, 0, ZoneOffset.ofHours(6)))
             )
         }
     }

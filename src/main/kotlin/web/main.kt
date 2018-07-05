@@ -2,9 +2,7 @@ package web
 
 import adr.JsonAction
 import adr.Router
-import com.beust.klaxon.Converter
 import com.beust.klaxon.JsonObject
-import com.beust.klaxon.JsonValue
 import com.beust.klaxon.Klaxon
 import data.mysql.MysqlAccountsRepository
 import data.mysql.MysqlDiscussionRepository
@@ -36,8 +34,6 @@ import web.api.v1.actions.GetProjectComments
 import web.api.v1.actions.GetProjectsForOrganization
 import web.api.v1.actions.GetUserById
 import java.io.StringReader
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import kotlin.reflect.KClass
 
 fun main(args: Array<String>) {
@@ -59,10 +55,6 @@ fun main(args: Array<String>) {
     app.enableStaticFiles("""C:\code\moura\src\main\resources\static\""", Location.EXTERNAL)
 
     val klaxon = Klaxon()
-        .converter(object: Converter<OffsetDateTime> {
-            override fun toJson(value: OffsetDateTime): String? = value.atZoneSameInstant(ZoneOffset.UTC).toString()
-            override fun fromJson(jv: JsonValue): OffsetDateTime = OffsetDateTime.parse(jv.string)
-        })
 
     JsonAction.configureSerializer(object: JsonAction.Serializer {
         override fun <T : Any> toJson(value: T) = klaxon.toJsonString(value)

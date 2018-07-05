@@ -4,8 +4,8 @@ import org.sql2o.Connection
 import org.sql2o.Query
 import org.sql2o.Sql2o
 import java.sql.Timestamp
-import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.findAnnotation
@@ -167,9 +167,7 @@ fun Connection.simpleDelete(tableName: String, condition: String, params: Map<St
     }
 }
 
-fun <T: Any?> Sql2o.openAndUse(block: (Connection) -> T) = open().use(block)
+fun <T: Any?> Sql2o.openAndApply(block: Connection.() -> T) = open().use { it.block() }
 
-fun <T: Any?> Sql2o.query(sql: String, block: (Query) -> T) = this.openAndUse({ conn -> conn.createQuery(sql).let(block) })
-
-fun toUtcOffsetDateTime(ts: Timestamp): OffsetDateTime = OffsetDateTime.ofInstant(ts.toInstant(), ZoneOffset.UTC)
-fun toTimestamp(odt: OffsetDateTime): Timestamp = Timestamp.from(odt.toInstant())
+fun Timestamp.toUtcZonedDateTime(): ZonedDateTime = ZonedDateTime.ofInstant(this.toInstant(), ZoneOffset.UTC)
+fun ZonedDateTime.toTimestamp(): Timestamp = Timestamp.from(this.toInstant())

@@ -1,8 +1,8 @@
 package integrationtests.database
 
 import junit.framework.TestCase
-import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 class MySqlDiscussionRepositoryTests : TestCase() {
 
@@ -13,8 +13,8 @@ class MySqlDiscussionRepositoryTests : TestCase() {
         val contextId = repository.createContextId()
 
         var messages = listOf(
-            DatabaseObjectMother.createTestMessage(contextId, users[0].id, OffsetDateTime.now(ZoneOffset.UTC).minusHours(2)),
-            DatabaseObjectMother.createTestMessage(contextId, users[1].id, OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(5)))
+            DatabaseObjectMother.createTestMessage(contextId, users[0].id, ZonedDateTime.now(ZoneOffset.UTC).minusHours(2)),
+            DatabaseObjectMother.createTestMessage(contextId, users[1].id, ZonedDateTime.now(ZoneOffset.UTC).minusMinutes(5)))
 
         var fetchedMessages = repository.getDiscussionMessages(contextId)
         assertEquals(messages, fetchedMessages)

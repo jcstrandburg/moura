@@ -16,7 +16,7 @@ import skl2o.executeAndFetchAs
 import skl2o.executeScalarAs
 import skl2o.mySqlFields
 import skl2o.mySqlUpdateStatement
-import skl2o.openAndUse
+import skl2o.openAndApply
 import skl2o.simpleDelete
 import skl2o.simpleInsert
 import skl2o.simpleSelect
@@ -24,66 +24,48 @@ import skl2o.simpleSelectByPrimaryKey
 
 class MysqlAccountsRepository(private val sql2o: Sql2o) : IAccountsRepository {
 
-    override fun getOrganization(id: Int): Organization? =
-        sql2o.openAndUse { conn -> conn.simpleSelectByPrimaryKey<DbOrganization>(id) }?.toDomain()
-
-    override fun getOrganization(token: String): Organization? {
-        return sql2o.openAndUse { conn ->
-            conn.simpleSelect<DbOrganization>("token=:token", mapOf("token" to token))
-                .singleOrNull()
-                ?.toDomain()
-        }
+    override fun getOrganization(id: Int): Organization? = sql2o.openAndApply {
+        simpleSelectByPrimaryKey<DbOrganization>(id)?.toDomain()
     }
 
-    override fun createOrganization(org: OrganizationCreateSet): Organization {
-        val id = sql2o.openAndUse { conn ->
-            conn.simpleInsert(DbOrganizationCreate(org.name, org.token))
-        }
+    override fun getOrganization(token: String): Organization? = sql2o.openAndApply {
+        simpleSelect<DbOrganization>("token=:token", mapOf("token" to token)).singleOrNull()
+    }?.toDomain()
 
+    override fun createOrganization(org: OrganizationCreateSet): Organization {
+        val id = sql2o.openAndApply { simpleInsert(DbOrganizationCreate(org.name, org.token)) }
         return getOrganization(id)!!
     }
 
-    override fun getOrganizationsForUser(userId: Int): List<Organization> {
-        val dbOrganizations = sql2o.openAndUse { conn ->
-            val organizationIds = conn
-                .simpleSelect<DbOrganizationRelationship>(
-                    "user_id=:userId",
-                    mapOf("userId" to userId))
-                .map { it.organizationId }
+    override fun getOrganizationsForUser(userId: Int): List<Organization> = sql2o.openAndApply {
+        val organizationIds = simpleSelect<DbOrganizationRelationship>(
+                "user_id=:userId",
+                mapOf("userId" to userId))
+            .map { it.organizationId }
 
-            conn.simpleSelect<DbOrganization>("organization_id IN (organizationIds)", mapOf("organizationIds" to organizationIds))
-        }
-
-        return dbOrganizations.map { it.toDomain() }
-    }
+        simpleSelect<DbOrganization>(
+                "organization_id IN (organizationIds)",
+                mapOf("organizationIds" to organizationIds))
+    }.map { it.toDomain() }
 
     override fun createUser(user: UserCreateSet): User {
-        val userId = sql2o.openAndUse { conn ->
-            conn.simpleInsert(DbUserCreate(user.name, user.password, user.alias, user.email))
-        }
+        val userId = sql2o.openAndApply { simpleInsert(DbUserCreate(user.name, user.password, user.alias, user.email)) }
         return getUserById(userId)!!
     }
 
-    override fun getUserByEmail(email: String): User? {
-        val dbUser = sql2o.openAndUse { conn ->
-            conn.simpleSelect<DbUser>("email=:email", mapOf("email" to email)).singleOrNull()
-        }
-        return dbUser?.toDomain()
-    }
+    override fun getUserByEmail(email: String): User? = sql2o.openAndApply {
+        simpleSelect<DbUser>("email=:email", mapOf("email" to email))
+            .singleOrNull()
+    }?.toDomain()
 
-    override fun getUserById(id: Int): User? {
-        val dbUser = sql2o.openAndUse { conn ->
-            conn.simpleSelectByPrimaryKey<DbUser>(id)
-        }
-        return dbUser?.toDomain()
-    }
+    override fun getUserById(id: Int): User? = sql2o.openAndApply { simpleSelectByPrimaryKey<DbUser>(id) }?.toDomain()
 
     override fun updateUser(userId: Int, changeSet: UserChangeSet): User? {
         val changes = DbUserChangeSet.from(changeSet).getChanges()
         if (changes.any()) {
-            sql2o.openAndUse { conn ->
+            sql2o.openAndApply {
                 val sql = mySqlUpdateStatement(changes, "users", "user_id=:userId")
-                conn.createQuery(sql)
+                createQuery(sql)
                     .addParameters(changes)
                     .addParameter("userId", userId)
                     .executeUpdate()
@@ -93,34 +75,22 @@ class MysqlAccountsRepository(private val sql2o: Sql2o) : IAccountsRepository {
         return getUserById(userId)
     }
 
-    override fun addUserToOrganization(userId: Int, organizationId: Int) {
-        sql2o.openAndUse {
-            it.simpleInsert(DbOrganizationRelationshipCreate(userId, organizationId))
-        }
+    override fun addUserToOrganization(userId: Int, organizationId: Int): Unit = sql2o.openAndApply {
+        simpleInsert(DbOrganizationRelationshipCreate(userId, organizationId))
     }
 
-    override fun removeUserFromOrganization(userId: Int, organizationId: Int) {
-        sql2o.openAndUse { conn ->
-            conn.simpleDelete<DbOrganizationRelationship>(
-                "user_id=:userId AND organization_id=:organizationId",
-                mapOf("userId" to userId, "organizationId" to organizationId))
-        }
+    override fun removeUserFromOrganization(userId: Int, organizationId: Int) = sql2o.openAndApply {
+        simpleDelete<DbOrganizationRelationship>(
+            "user_id=:userId AND organization_id=:organizationId",
+            mapOf("userId" to userId, "organizationId" to organizationId))
     }
 
-    override fun isUserInOrganization(userId: Int, organizationId: Int): Boolean {
-        val sql = """
-SELECT COUNT(user_id) FROM `organization_relationships` WHERE user_id=:userId AND organization_id=:organizationId
-"""
-
-        val count = sql2o.openAndUse { conn ->
-            conn.createQuery(sql)
-                .addParameter("userId", userId)
-                .addParameter("organizationId", organizationId)
-                .executeScalarAs<Long>()
-        }
-
-        return count > 0
-    }
+    override fun isUserInOrganization(userId: Int, organizationId: Int): Boolean = sql2o.openAndApply {
+        createQuery("SELECT COUNT(user_id) FROM `organization_relationships` WHERE user_id=:userId AND organization_id=:organizationId")
+            .addParameter("userId", userId)
+            .addParameter("organizationId", organizationId)
+            .executeScalarAs<Long>()
+    } > 0
 
     override fun getUsersForOrganization(organizationId: Int): List<User> {
         val sql = """
@@ -130,20 +100,17 @@ JOIN organization_relationships r
 ON u.user_id = r.user_id
 WHERE r.organization_id=:organizationId
 """
-        val dbUsers = sql2o.open().createQuery(sql).use { query ->
-            query.addParameter("organizationId", organizationId)
-                .executeAndFetchAs<DbUser>()
-        }
-
-        return dbUsers.map { it.toDomain() }
+        return sql2o.openAndApply { createQuery(sql)
+            .addParameter("organizationId", organizationId)
+            .executeAndFetchAs<DbUser>()
+        }.map { it.toDomain() }
     }
 
     companion object {
         private fun DbUser.toDomain() =
             User(this.userId, this.username, this.password, this.authToken ?: "", this.alias, this.email)
 
-        private fun DbOrganization.toDomain() =
-            Organization(this.organizationId, this.name, this.token)
+        private fun DbOrganization.toDomain() = Organization(this.organizationId, this.name, this.token)
     }
 
     @TableName("organization_relationships")

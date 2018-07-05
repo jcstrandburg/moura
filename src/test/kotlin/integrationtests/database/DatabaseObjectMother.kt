@@ -13,7 +13,7 @@ import domain.projects.Project
 import domain.projects.ProjectCreate
 import junit.framework.TestCase
 import org.sql2o.Sql2o
-import java.time.OffsetDateTime
+import java.time.ZonedDateTime
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -77,7 +77,7 @@ class DatabaseObjectMother {
             return project
         }
 
-        fun createTestMessage(contextId: Int, userId: Int, createdTime: OffsetDateTime): DiscussionMessage {
+        fun createTestMessage(contextId: Int, userId: Int, createdTime: ZonedDateTime): DiscussionMessage {
             val messageCreate = DiscussionMessageCreate(contextId, userId, "Message ${UUID.randomUUID()}")
 
             val message = discussionRepository.createDiscussionMessage(messageCreate, createdTime)

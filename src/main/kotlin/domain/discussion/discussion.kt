@@ -1,14 +1,14 @@
 package domain.discussion
 
-import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 data class DiscussionMessage(
     val id: Int,
     val contextId: Int,
     val userId: Int,
     val content: String,
-    val createdTime: OffsetDateTime)
+    val createdTime: ZonedDateTime)
 
 data class DiscussionMessageCreate(
     val contextId: Int,
@@ -16,7 +16,7 @@ data class DiscussionMessageCreate(
     val content: String)
 
 interface IDiscussionRepository {
-    fun createDiscussionMessage(message: DiscussionMessageCreate, createdTime: OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC)): DiscussionMessage
+    fun createDiscussionMessage(message: DiscussionMessageCreate, createdTime: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC)): DiscussionMessage
     fun getDiscussionMessages(contextId: Int): List<DiscussionMessage>
 }
 

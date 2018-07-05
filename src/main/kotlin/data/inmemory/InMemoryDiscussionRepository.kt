@@ -5,7 +5,7 @@ import domain.discussion.DiscussionMessage
 import domain.discussion.DiscussionMessageCreate
 import domain.discussion.IDiscussionContextRepository
 import domain.discussion.IDiscussionRepository
-import java.time.OffsetDateTime
+import java.time.ZonedDateTime
 
 class InMemoryDiscussionRepository: IDiscussionRepository, IDiscussionContextRepository {
 
@@ -14,7 +14,7 @@ class InMemoryDiscussionRepository: IDiscussionRepository, IDiscussionContextRep
 
     override fun createContextId() = nextContextId++
 
-    override fun createDiscussionMessage(message: DiscussionMessageCreate, createdTime: OffsetDateTime): DiscussionMessage {
+    override fun createDiscussionMessage(message: DiscussionMessageCreate, createdTime: ZonedDateTime): DiscussionMessage {
         return messages.insert { id ->
             DiscussionMessage(
                 id,
