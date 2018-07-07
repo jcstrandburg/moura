@@ -5,7 +5,7 @@ import io.javalin.Context
 import io.javalin.Javalin
 import kotlin.reflect.KClass
 
-class Router(private val doGetAction: (Context, KClass<*>) -> Any) {
+class Router(private val doGetAction: (Context, KClass<*>) -> Action) {
 
     fun routes(app: Javalin, register: Router.() -> Unit): Javalin = app.routes { register() }
 
@@ -27,6 +27,6 @@ class Router(private val doGetAction: (Context, KClass<*>) -> Any) {
     fun <T: Action> patch(kclass: KClass<T>, path: String = "") = ApiBuilder.patch(path, doAction(kclass))
 
     private fun doAction(kclass: KClass<*>): (Context) -> Unit = { ctx ->
-        (doGetAction(ctx, kclass) as Action).handle(ctx)
+        doGetAction(ctx, kclass).handle(ctx)
     }
 }

@@ -25,6 +25,7 @@ export default class JsonClient {
     constructor(options={}) {
         this.getCustomHeaders = options.getCustomHeaders || null;
         this.customFetch = options.fetch || null;
+        this.fetchOptions = options.fetchOptions || {};
     }
 
     getHeaders() {
@@ -53,7 +54,7 @@ export default class JsonClient {
 
     processRequest(uri, params, method, body = null) {
         let fetchOptions = {
-            credentials: "same-origin",
+            credentials: this.fetchOptions.credentials || "same-origin",
             method: method,
             body: body,
             headers: this.getHeaders()

@@ -19,19 +19,15 @@ class AuthenticationService(val context: Context, val accountRepository: IAccoun
         if (authenticatedUser != null)
             return authenticatedUser
 
-        val userId = context.cookie(USER_ID_COOKIE)?.toIntOrNull()
-        val authToken = context.cookie(AUTH_TOKEN_COOKIE)
-        if (userId == null || authToken == null)
-            return null
+        val authHeader = context.header(AUTHORIZATION_HEADER)
 
-        val user = accountRepository.getUserById(userId) ?: return null
-
-        authenticatedUser = if (user.authToken == authToken)
-            user
+        val authToken = (if (authHeader != null)
+            extractTokenFromHeader(authHeader)
         else
-            null
+            context.cookie(AUTH_TOKEN_COOKIE))
+        ?: return null
 
-        return authenticatedUser
+        return accountRepository.getUserByAuthToken(authToken) ?: return null
     }
 
     fun logInUser(email: String, plainPassword: String): User? {
@@ -41,7 +37,6 @@ class AuthenticationService(val context: Context, val accountRepository: IAccoun
         if (passwordHasher.checkPassword(plainPassword, user.password)) {
             val changeSet = UserChangeSet(authToken = Change(UUID.randomUUID().toString()))
             val userWithAuthToken = accountRepository.updateUser(user.id, changeSet)!!
-            setCookie(USER_ID_COOKIE, userWithAuthToken.id.toString())
             setCookie(AUTH_TOKEN_COOKIE, userWithAuthToken.authToken!!)
             authenticatedUser = userWithAuthToken
         }
@@ -49,12 +44,9 @@ class AuthenticationService(val context: Context, val accountRepository: IAccoun
         return authenticatedUser
     }
 
-    fun hashPassword(plainPassword: String) = passwordHasher.hashPassword(plainPassword)
-
     fun logOutUser() {
         val authenticatedUserId = authenticatedUser?.id ?: return
         accountRepository.updateUser(authenticatedUserId, UserChangeSet(authToken = Change(null)))
-        unsetCookie(USER_ID_COOKIE)
         unsetCookie(AUTH_TOKEN_COOKIE)
         authenticatedUser = null
     }
@@ -67,8 +59,8 @@ class AuthenticationService(val context: Context, val accountRepository: IAccoun
 
     private fun setCookie(name: String, value: String) {
         context.cookie(CookieBuilder(
-            path = "/",
-            name = name, // root path so that the cookie gets submitted for all pages
+            path = "/", // root path so that the cookie gets submitted for all pages
+            name = name,
             value = value,
             maxAge = -1, // no expiration
             secure = false,
@@ -78,8 +70,15 @@ class AuthenticationService(val context: Context, val accountRepository: IAccoun
     private fun unsetCookie(name: String) = context.removeCookie("/", name)
 
     companion object {
-        private const val USER_ID_COOKIE = "username"
+        private const val AUTHORIZATION_HEADER = "X-Authorization"
         private const val AUTH_TOKEN_COOKIE = "authToken"
         private const val LOG_IN_REDIRECT_COOKIE = "logInSuccessRedirect"
+
+        private val authHeaderRegex = Regex("TOKEN (.+)")
+
+        fun extractTokenFromHeader(header: String): String? {
+            val match = authHeaderRegex.find(header) ?: return null
+            return match.groups[1]?.value
+        }
     }
 }

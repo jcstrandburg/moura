@@ -12,8 +12,8 @@ class MySqlAccountsRepositoryTests : TestCase() {
     fun `test create and get user`() {
         val createdUser = DatabaseObjectMother.createTestUser()
 
-        val fetchedUser = accountsRepository.getUserById(createdUser.id)!!
-        assertEquals(createdUser, fetchedUser)
+        assertEquals(createdUser, accountsRepository.getUserById(createdUser.id)!!)
+        assertEquals(createdUser, accountsRepository.getUserByToken(createdUser.token)!!)
     }
 
     fun `test update user`() {
@@ -53,5 +53,8 @@ class MySqlAccountsRepositoryTests : TestCase() {
 
         assertTrue(accountsRepository.isUserInOrganization(users[0].id, organizationId))
         assertFalse(accountsRepository.isUserInOrganization(users[1].id, organizationId))
+
+        val orgs = accountsRepository.getOrganizationsForUser(users[0].id)
+        assertTrue(orgs.map { it.id }.contains(organizationId))
     }
 }

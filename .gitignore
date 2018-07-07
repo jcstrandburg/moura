@@ -18,3 +18,5 @@ frontend-js/node_modules/
 src/main/resources/static/index\.js
 
 src/main/kotlin/scripts/
+
+frontend-js/\.package\.json\.swp

@@ -10,6 +10,7 @@ import domain.accounts.UserCreateSet
 import java.util.*
 
 class InMemoryAccountsRepository : IAccountsRepository {
+
     private val users = AutoIncrementMemoryRepository<User>()
     private val organizations = AutoIncrementMemoryRepository<Organization>()
     private val userIdsByOrgId = HashMap<Int, HashSet<Int>>()
@@ -22,6 +23,9 @@ class InMemoryAccountsRepository : IAccountsRepository {
 
     override fun getUserById(id: Int): User? =
         users.get(id)
+
+    override fun getUserByAuthToken(authToken: String): User? =
+        users.entities.singleOrNull { it.authToken == authToken }
 
     override fun getUserByToken(token: String): User? =
         users.entities.singleOrNull { it.token == token }

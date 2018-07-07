@@ -44,8 +44,8 @@ class MysqlAccountsRepository(private val sql2o: Sql2o) : IAccountsRepository {
             .map { it.organizationId }
 
         simpleSelect<DbOrganization>(
-                "organization_id IN (organizationIds)",
-                mapOf("organizationIds" to organizationIds))
+            "organization_id IN (:organizationIds)",
+            mapOf("organizationIds" to organizationIds))
     }.map { it.toDomain() }
 
     override fun createUser(user: UserCreateSet): User {
@@ -58,6 +58,10 @@ class MysqlAccountsRepository(private val sql2o: Sql2o) : IAccountsRepository {
     }?.toDomain()
 
     override fun getUserById(id: Int): User? = sql2o.openAndApply { simpleSelectByPrimaryKey<DbUser>(id) }?.toDomain()
+
+    override fun getUserByAuthToken(authToken: String): User? = sql2o.openAndApply {
+        simpleSelect<DbUser>("auth_token=:authToken", mapOf("authToken" to authToken)).singleOrNull()
+    }?.toDomain()
 
     override fun getUserByToken(token: String): User? = sql2o.openAndApply {
         simpleSelect<DbUser>("token=:token", mapOf("token" to token)).singleOrNull()

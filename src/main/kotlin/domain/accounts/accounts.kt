@@ -41,6 +41,7 @@ interface IAccountsReadRepository {
     fun getOrganizationsForUser(userId: Int): List<Organization>
     fun getUserByEmail(email: String): User?
     fun getUserById(id: Int): User?
+    fun getUserByAuthToken(authToken: String): User?
     fun getUserByToken(token: String): User?
     fun getUsersForOrganization(organizationId: Int): List<User>
     fun isUserInOrganization(userId: Int, organizationId: Int): Boolean
