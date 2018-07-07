@@ -38,20 +38,11 @@ import web.api.v1.actions.GetUserByToken
 import java.io.StringReader
 import kotlin.reflect.KClass
 
-class Moura(val port: Int) {
+class Moura(val port: Int, val container: Container) {
 
     private lateinit var app : Javalin
 
     fun start() {
-        val container = Container()
-
-        container.register { Sql2o("jdbc:mysql://localhost:3306/moura", "root", "jimbolina") }
-        container.register<IAccountsReadRepository, IAccountsRepository>()
-        container.register<IAccountsRepository, MysqlAccountsRepository>()
-        container.register<IProjectRepository, MysqlProjectRepository>()
-        container.register<IDiscussionRepository, MysqlDiscussionRepository>()
-        container.register<AuthenticationService, AuthenticationService>(Lifecycle.PerContainer)
-
         app = Javalin.create()
 
         app.enableStaticFiles("""C:\code\moura\src\main\resources\static\""", Location.EXTERNAL)
@@ -123,5 +114,14 @@ class Moura(val port: Int) {
 }
 
 fun main(args: Array<String>) {
-    Moura(7000).start()
+    val container = Container()
+
+    container.register { Sql2o("jdbc:mysql://localhost:3306/moura", "root", "jimbolina") }
+    container.register<IAccountsReadRepository, IAccountsRepository>()
+    container.register<IAccountsRepository, MysqlAccountsRepository>()
+    container.register<IProjectRepository, MysqlProjectRepository>()
+    container.register<IDiscussionRepository, MysqlDiscussionRepository>()
+    container.register<AuthenticationService, AuthenticationService>(Lifecycle.PerContainer)
+
+    Moura(7000, container).start()
 }
