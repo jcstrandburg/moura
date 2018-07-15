@@ -25,11 +25,11 @@ export default class PrettyDate extends Component {
         }
     }
 
-    doRender = (date) =>
-    <span title={date.toLocaleString()}>
+    doRender = (date, style) =>
+    <span title={date.toLocaleString()} style={style}>
         {this.toDisplayString(date)}
     </span>
 
     // TODO: Make this more efficient?
-    render = () => this.doRender(new Date(this.props.date))
+    render = () => this.doRender(new Date(this.props.date), this.props.style)
 }

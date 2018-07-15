@@ -8,28 +8,28 @@ import PrettyDate from 'components/PrettyDate.jsx';
 import { LazyLoadRequestCache, LazyLoadDataService } from 'util/lazyLoad.js';
 import toDict from 'util/toDict.js';
 
-let mockUsers = toDict([
+let mockUsers = [
     {
-        id: 0,
         name: 'Mock User',
+        token: '4a56159e-f2a2-40b1-ab45-bf3fe9597f5f',
     },
     {
-        id: 1,
         name: 'Demo User 1',
+        token: '337029c9-2183-40c6-b3bd-4dc42ff63992',
     },
     {
-        id: 2,
         name: 'Bobbert Bobberson',
+        token: '2a0534ca-0684-49d5-97da-5a556d9eafa9',
     },
     {
-        id: 3,
         name: 'Sam Smith',
+        token: '586f618f-e46f-40f5-8f74-0da1e6a5f336',
     },
     {
-        id: 4,
         name: 'Jimbo Jimmerson',
+        token: 'a70fec41-2837-4ccd-a9f2-b548ea4cf0ef',
     },
-], it => it.id);
+];
 
 const Mock = ({ children }) => <div>{children}</div>;
 Mock.propTypes = {
@@ -82,8 +82,8 @@ export default class MockViewer extends Component {
     render = () =>
     <div>
         <Header user={mockUsers[0]} signOut={() => {}} />
-        <MockSelector defaultMock="DiscussionThreadMessage">
-            <Mock mockName="action-link">
+        <MockSelector defaultMock="DiscussionThread">
+            <Mock mockName="ActionLink">
                 <ActionLink text="Click Me" action={() => alert('click')}/>
             </Mock>
             <Mock mockName="PrettyDate">
@@ -95,7 +95,10 @@ export default class MockViewer extends Component {
                 <Message message={{ user: mockUsers[0], createdTime: new Date('2018-03-24T10:20:48Z'), content: "Ideations" }} />
             </Mock>
             <Mock mockName="DiscussionThread">
-                <DiscussionThread messages={[]}/>
+                <DiscussionThread messages={[
+                    { user: mockUsers[0], createdTime: new Date('2018-03-24T10:20:48Z'), content: "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit." },
+                    { user: mockUsers[1], createdTime: new Date('2018-03-24T10:45:48Z'), content: "Sed in purus sagittis erat pharetra dapibus. In commodo at leo porttitor dictum." }
+                ]}/>
             </Mock>
         </MockSelector>
     </div>;
