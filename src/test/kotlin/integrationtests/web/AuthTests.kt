@@ -92,13 +92,13 @@ class AuthTests : TestCase() {
         }
 
         private val container by lazy {
-            val c = Container()
-            c.register<IAccountsReadRepository, IAccountsRepository>()
-            c.register<IAccountsRepository, InMemoryAccountsRepository>()
-            c.register<IProjectRepository, InMemoryProjectRepository>()
-            c.register<IDiscussionRepository, InMemoryDiscussionRepository>()
-            c.register<AuthenticationService, AuthenticationService>(Lifecycle.PerContainer)
-            c
+            Container().apply {
+                register<IAccountsReadRepository, IAccountsRepository>()
+                register<IAccountsRepository, InMemoryAccountsRepository>()
+                register<IProjectRepository, InMemoryProjectRepository>()
+                register<IDiscussionRepository, InMemoryDiscussionRepository>()
+                register<AuthenticationService, AuthenticationService>(Lifecycle.PerContainer)
+            }
         }
 
         private val accountsRepository by lazy { container.get<IAccountsRepository>() }

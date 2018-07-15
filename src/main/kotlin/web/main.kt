@@ -10,14 +10,12 @@ import data.mysql.MysqlDiscussionRepository
 import data.mysql.MysqlProjectRepository
 import domain.accounts.IAccountsReadRepository
 import domain.accounts.IAccountsRepository
-import domain.accounts.UserChangeSet
 import domain.discussion.IDiscussionRepository
 import domain.projects.IProjectRepository
 import io.javalin.Javalin
 import io.javalin.embeddedserver.Location
 import org.sql2o.Sql2o
 import services.AuthenticationService
-import services.BcryptPasswordHasher
 import vulcan.Container
 import vulcan.Lifecycle
 import web.actions.GetSignInForm
@@ -48,9 +46,6 @@ class Moura(val port: Int, val container: Container) {
         app.enableStaticFiles("""C:\code\moura\src\main\resources\static\""", Location.EXTERNAL)
 
         val klaxon = Klaxon()
-
-        val password = container.get<BcryptPasswordHasher>().hashPassword("jimbolina")
-        container.get<IAccountsRepository>().updateUser(116, UserChangeSet(password = password))
 
         JsonAction.configureSerializer(object: JsonAction.Serializer {
             override fun <T : Any> toJson(value: T) = klaxon.toJsonString(value)
@@ -114,14 +109,14 @@ class Moura(val port: Int, val container: Container) {
 }
 
 fun main(args: Array<String>) {
-    val container = Container()
-
-    container.register { Sql2o("jdbc:mysql://localhost:3306/moura", "root", "jimbolina") }
-    container.register<IAccountsReadRepository, IAccountsRepository>()
-    container.register<IAccountsRepository, MysqlAccountsRepository>()
-    container.register<IProjectRepository, MysqlProjectRepository>()
-    container.register<IDiscussionRepository, MysqlDiscussionRepository>()
-    container.register<AuthenticationService, AuthenticationService>(Lifecycle.PerContainer)
+    val container = Container().apply {
+        register { Sql2o("jdbc:mysql://localhost:3306/moura", "root", "jimbolina") }
+        register<IAccountsReadRepository, IAccountsRepository>()
+        register<IAccountsRepository, MysqlAccountsRepository>()
+        register<IProjectRepository, MysqlProjectRepository>()
+        register<IDiscussionRepository, MysqlDiscussionRepository>()
+        register<AuthenticationService, AuthenticationService>(Lifecycle.PerContainer)
+    }
 
     Moura(7000, container).start()
 }
