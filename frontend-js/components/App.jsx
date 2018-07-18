@@ -5,8 +5,8 @@ import Header from 'components/Header.jsx';
 
 export default class App extends Component {
 
-    doRender = ({ user, signOut }) => 
-    <div>
+    doRender = ({ user, signOut, ...props }) => 
+    <div {...props}>
         <Header user={user} signOut={signOut} />
         <div>
             Content goes here

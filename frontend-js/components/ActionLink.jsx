@@ -7,7 +7,7 @@ const style = {
     textDecoration: 'underline',
 };
 
-const ActionLink = ({ action, text }) => <span onClick={action} className='action-link' style={style}>{text}</span>;
+const ActionLink = ({ action, text, ...props }) => <span onClick={action} className='action-link' style={style} {...props}>{text}</span>;
 export default ActionLink;
 
 ActionLink.propTypes = {
