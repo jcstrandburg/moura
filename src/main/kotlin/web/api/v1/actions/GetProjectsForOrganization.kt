@@ -21,8 +21,8 @@ class GetProjectsForOrganization(
         val organization = accountsReadRepository.getOrganization(orgToken)?: return NotFound()
         val projects = projectRepository.getProjectsForOrganization(organization.id, parentProjectId)
 
-        return Ok(ProjectCollectionDto(projects.map {
-            ProjectSummaryDto(it.id, it.name, it.organizationId, it.parentProjectId)
-        }))
+        return Ok(ProjectCollectionDto(
+            projects.map { ProjectSummaryDto(it.id, it.name, it.organizationId, it.parentProjectId) },
+            isLastPage = true))
     }
 }

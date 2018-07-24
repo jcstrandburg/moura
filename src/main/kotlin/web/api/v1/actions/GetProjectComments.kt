@@ -32,7 +32,8 @@ class GetProjectComments(
                     userId = it.userId,
                     content = it.content,
                     createdTime = it.createdTime)
-            }
+            },
+            isLastPage = true
         ))
     }
 }

@@ -8,12 +8,12 @@ data class CurrentUserDto(val user: UserDto, val organizations: Collection<Organ
 
 data class OrganizationSummaryDto(val id: Int, val name: String, val token: String)
 data class OrganizationCreateDto(val organization: OrganizationSummaryDto)
-data class OrganizationCollectionDto(val organizations: List<OrganizationSummaryDto>)
+data class OrganizationCollectionDto(val organizations: List<OrganizationSummaryDto>, val isLastPage: Boolean)
 
 data class ProjectSummaryDto(val id: Int, val name: String, val organizationId: Int, val parentProjectId: Int?)
 data class ProjectCreateDto(val project: ProjectSummaryDto)
-data class ProjectCollectionDto(val projects: List<ProjectSummaryDto>)
+data class ProjectCollectionDto(val projects: List<ProjectSummaryDto>, val isLastPage: Boolean)
 
 data class DiscussionCommentCreateDto(val content: String)
 data class DiscussionCommentDto(val id: Int, val userId: Int, val content: String, val createdTime: ZonedDateTime)
-data class DiscussionCommentCollectionDto(val comments: List<DiscussionCommentDto>)
+data class DiscussionCommentCollectionDto(val comments: List<DiscussionCommentDto>, val isLastPage: Boolean)
