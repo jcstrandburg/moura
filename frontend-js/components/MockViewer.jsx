@@ -62,7 +62,7 @@ class MockSelector extends Component {
             .map(name => <option value={name} key={name}>{name}</option>)
     }
 
-    render = () => 
+    render = () =>
         <div>
             <select id='mock-selector' value={this.state.selectedMock} onChange={this.onSelectedMockChange}>
                 <option value=''></option>
@@ -95,15 +95,17 @@ function concatMessages(messages, count) {
 
     var newMessages = [];
     for (var i = 0; i < count; i++) {
-        time = new Date(time.setMinutes(time.getMinutes() - Math.random() * 60));
+        time = new Date(time - Math.random() * 60 * 60 * 1000);
         newMessages.push({ token: uuid(), user: pickOne(mockUsers), createdTime: time, content: filler() })
     }
 
-    return messages.concat(newMessages).sort((a, b) => {
+    let m = messages.concat(newMessages).sort((a, b) => {
         return a.createdTime < b.createdTime ? -1 :
             a.createdTime > b.createdTime ? 1 :
             0;
     });
+
+    return m;
 }
 
 function appendMessage(messages) {
@@ -112,7 +114,7 @@ function appendMessage(messages) {
 
 export default class MockViewer extends Component {
     state = {
-        chatMessages: concatMessages([], 10),
+        chatMessages: [],
     };
 
     loadMoreMessages = () => {
@@ -124,14 +126,14 @@ export default class MockViewer extends Component {
         setTimeout(this.appendMessage, Math.random() * 10000 + 500);
     }
 
-    componentDidMount = () => this.appendMessage();
-
     fetchMessages = () => new Promise((resolve, reject) => {
         setTimeout(() => {
-            this.setState({ chatMessages: concatMessages(this.state.chatMessages, 3)});
+            this.setState({ chatMessages: concatMessages(this.state.chatMessages, 25)});
             resolve();
-        }, Math.random()*1000 + 250);
+        }, Math.random() * 1200 + 300);
       });
+
+    componentDidMount = () => this.appendMessage();
 
     render = () =>
     <div>

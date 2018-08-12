@@ -61,36 +61,36 @@ class Moura(val port: Int, val container: Container) {
 
         Router { ctx, kclass -> container.getNestedContainer().register(ctx).get(kclass) as Action }
             .routes(app) {
-                path("/signin") {
+                path("signin/") {
                     get<GetSignInForm>()
                     post<PostSignInForm>()
                 }
-                get<SignOut>("/signout")
-                path("/app/") {
+                get<SignOut>("signout/")
+                path("app/") {
                     get<ServeApp>()
                 }
-                path("/mock") {
+                path("mock/") {
                     get<ServeMock>()
                 }
-                path ("/api/v1/") {
+                path ("api/v1/") {
                     path("users/") {
                         post<CreateUser>()
                         path("me/") {
                             get<GetCurrentUser>()
                         }
-                        get<GetUserByToken>(":token")
+                        get<GetUserByToken>(":token/")
                     }
-                    path("orgs") {
+                    path("orgs/") {
                         post<CreateOrganization>()
                         path(":token/") {
                             get<GetOrganizationByToken>()
-                            get<GetProjectsForOrganization>("projects")
+                            get<GetProjectsForOrganization>("projects/")
                         }
                     }
-                    path("projects") {
+                    path("projects/") {
                         path(":projectId/") {
                             get<GetProjectById>()
-                            path("comments") {
+                            path("comments/") {
                                 get<GetProjectComments>()
                                 post<CreateProjectComment>()
                             }
