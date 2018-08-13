@@ -1,7 +1,6 @@
 package web
 
 import adr.Action
-import adr.JsonAction
 import adr.Router
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Klaxon
@@ -14,6 +13,9 @@ import domain.discussion.IDiscussionRepository
 import domain.projects.IProjectRepository
 import io.javalin.Javalin
 import io.javalin.embeddedserver.Location
+import io.javalin.translator.json.JavalinJsonPlugin
+import io.javalin.translator.json.JsonToObjectMapper
+import io.javalin.translator.json.ObjectToJsonMapper
 import org.sql2o.Sql2o
 import services.AuthenticationService
 import vulcan.Container
@@ -34,7 +36,6 @@ import web.api.v1.actions.GetProjectComments
 import web.api.v1.actions.GetProjectsForOrganization
 import web.api.v1.actions.GetUserByToken
 import java.io.StringReader
-import kotlin.reflect.KClass
 
 class Moura(val port: Int, val container: Container) {
 
@@ -47,17 +48,19 @@ class Moura(val port: Int, val container: Container) {
 
         val klaxon = Klaxon()
 
-        JsonAction.configureSerializer(object: JsonAction.Serializer {
-            override fun <T : Any> toJson(value: T) = klaxon.toJsonString(value)
+        JavalinJsonPlugin.jsonToObjectMapper = object: JsonToObjectMapper {
+            override fun <T> map(json: String, targetClass: Class<T>): T {
+                val kclass = targetClass::class
 
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : Any> fromJson(json: String, kclass: KClass<T>): T {
                 return klaxon.fromJsonObject(
                     klaxon.parser(kclass).parse(StringReader(json)) as JsonObject,
-                    kclass.java,
+                    targetClass,
                     kclass) as T
             }
-        })
+        }
+        JavalinJsonPlugin.objectToJsonMapper = object: ObjectToJsonMapper {
+            override fun map(obj: Any): String = klaxon.toJsonString(obj)
+        }
 
         Router { ctx, kclass -> container.getNestedContainer().register(ctx).get(kclass) as Action }
             .routes(app) {
@@ -88,6 +91,7 @@ class Moura(val port: Int, val container: Container) {
                         }
                     }
                     path("projects/") {
+                        post<CreateProject>()
                         path(":projectId/") {
                             get<GetProjectById>()
                             path("comments/") {
@@ -95,11 +99,11 @@ class Moura(val port: Int, val container: Container) {
                                 post<CreateProjectComment>()
                             }
                         }
-                        post<CreateProject>()
                     }
                 }
             }
 
+        app.enableRouteOverview("route-overview")
         app.port(port).start()
     }
 

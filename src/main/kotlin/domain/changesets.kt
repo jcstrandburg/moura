@@ -17,7 +17,7 @@ open class ChangeSet<T: Any> {
 
     fun applyTo(src: T): T {
         val changes = getChanges()
-        val copy = src.javaClass.kotlin.declaredMemberFunctions.single({ it.name == "copy" })
+        val copy = src.javaClass.kotlin.declaredMemberFunctions.single { it.name == "copy" }
 
         val paramsByName = copy.parameters
             .associateBy { p -> p.name }

@@ -21,8 +21,7 @@ abstract class JsonAction(
         val result = before() ?: doHandle(ctx)
 
         ctx.status(result.status.httpCode)
-        ctx.contentType("application/json")
-        ctx.result(serializer.toJson(result.response))
+        ctx.json(result.response)
     }
 
     abstract fun doHandle(ctx: Context): JsonResult
@@ -31,27 +30,13 @@ abstract class JsonAction(
 
     protected fun <T:Any> fromBody(ctx: Context, kclass: KClass<T>): T {
         try {
-            return serializer.fromJson<T>(ctx.body(), kclass)
+            return ctx.bodyAsClass(kclass.java)
         } catch (e: Exception) {
             throw HaltException(Status.BAD_REQUEST)
         }
     }
 
-    interface Serializer {
-        fun <T: Any> toJson(value: T): String
-        fun <T: Any> fromJson(json: String, kclass: KClass<T>): T
-    }
-
     companion object {
-
-        private var serializer: Serializer = object: Serializer {
-            override fun <T : Any> toJson(value: T): String = throw Exception("Please configure a Serializer")
-            override fun <T : Any> fromJson(json: String, kclass: KClass<T>): T = throw Exception("Please configure a Serializer")
-        }
-
-        fun configureSerializer(_serializer: Serializer) {
-            serializer = _serializer
-        }
 
         fun Ok(response: Any = Unit) = JsonResult(Status.OK, response)
         fun Created(response: Any = Unit) = JsonResult(Status.CREATED, response)
