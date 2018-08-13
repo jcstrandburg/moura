@@ -83,7 +83,7 @@ class Moura(val port: Int, val container: Container) {
                         }
                         get<GetUserByToken>(":token/")
                     }
-                    path("orgs/") {
+                    path("organizations/") {
                         post<CreateOrganization>()
                         path(":token/") {
                             get<GetOrganizationByToken>()
@@ -103,7 +103,6 @@ class Moura(val port: Int, val container: Container) {
                 }
             }
 
-        app.enableRouteOverview("route-overview")
         app.port(port).start()
     }
 
