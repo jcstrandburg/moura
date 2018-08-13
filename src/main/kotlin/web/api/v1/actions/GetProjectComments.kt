@@ -8,7 +8,7 @@ import domain.projects.IProjectRepository
 import io.javalin.Context
 import services.AuthenticationService
 import web.api.v1.DiscussionCommentCollectionDto
-import web.api.v1.DiscussionCommentDto
+import web.api.v1.toDto
 
 class GetProjectComments(
     authenticationService: AuthenticationService,
@@ -26,13 +26,7 @@ class GetProjectComments(
 
         val messages = discussionRepository.getDiscussionMessages(project.discussionContextId)
         return Ok(DiscussionCommentCollectionDto(
-            messages.map {
-                DiscussionCommentDto(
-                    id = it.id,
-                    userId = it.userId,
-                    content = it.content,
-                    createdTime = it.createdTime)
-            },
+            messages.map { it.toDto() },
             isLastPage = true
         ))
     }

@@ -6,7 +6,7 @@ import domain.accounts.IAccountsReadRepository
 import domain.projects.IProjectRepository
 import io.javalin.Context
 import services.AuthenticationService
-import web.api.v1.ProjectSummaryDto
+import web.api.v1.toSummaryDto
 
 class GetProjectById(
     authenticationService: AuthenticationService,
@@ -21,10 +21,6 @@ class GetProjectById(
         if (!accountsReadRepository.isUserInOrganization(authenticatedUser.id, project.organizationId))
             return NotFound()
 
-        return Ok(ProjectSummaryDto(
-            id = project.id,
-            name = project.name,
-            organizationId = project.organizationId,
-            parentProjectId = project.parentProjectId))
+        return Ok(project.toSummaryDto())
     }
 }

@@ -7,7 +7,7 @@ import domain.projects.IProjectRepository
 import io.javalin.Context
 import services.AuthenticationService
 import web.api.v1.ProjectCollectionDto
-import web.api.v1.ProjectSummaryDto
+import web.api.v1.toSummaryDto
 
 class GetProjectsForOrganization(
     authenticationService: AuthenticationService,
@@ -22,7 +22,7 @@ class GetProjectsForOrganization(
         val projects = projectRepository.getProjectsForOrganization(organization.id, parentProjectId)
 
         return Ok(ProjectCollectionDto(
-            projects.map { ProjectSummaryDto(it.id, it.name, it.organizationId, it.parentProjectId) },
+            projects.map { it.toSummaryDto() },
             isLastPage = true))
     }
 }

@@ -5,7 +5,7 @@ import adr.JsonResult
 import domain.accounts.IAccountsReadRepository
 import io.javalin.Context
 import services.AuthenticationService
-import web.api.v1.UserDto
+import web.api.v1.toDto
 
 class GetUserByToken(
     authenticationService: AuthenticationService,
@@ -16,10 +16,6 @@ class GetUserByToken(
         val token = ctx.param("token") ?: return BadRequest()
 
         val user = accountsRepository.getUserByToken(token) ?: return NotFound()
-        return Ok(UserDto(
-            id = user.id,
-            name = user.name,
-            alias = user.alias,
-            token = user.token))
+        return Ok(user.toDto())
     }
 }

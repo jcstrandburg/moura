@@ -8,7 +8,7 @@ import domain.projects.ProjectCreate
 import io.javalin.Context
 import services.AuthenticationService
 import web.api.v1.ProjectCreateDto
-import web.api.v1.ProjectSummaryDto
+import web.api.v1.toSummaryDto
 
 class CreateProject(
     authenticationService: AuthenticationService,
@@ -30,10 +30,6 @@ class CreateProject(
 
         val createdProject = projectRepository.createProject(project)
 
-        return Created(ProjectSummaryDto(
-            createdProject.id,
-            createdProject.name,
-            createdProject.organizationId,
-            createdProject.parentProjectId))
+        return Created(createdProject.toSummaryDto())
     }
 }

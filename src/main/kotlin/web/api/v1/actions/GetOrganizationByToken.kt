@@ -5,7 +5,7 @@ import adr.JsonResult
 import domain.accounts.IAccountsReadRepository
 import io.javalin.Context
 import services.AuthenticationService
-import web.api.v1.OrganizationSummaryDto
+import web.api.v1.toSummaryDto
 
 class GetOrganizationByToken(
     authenticationService: AuthenticationService,
@@ -15,6 +15,6 @@ class GetOrganizationByToken(
 
         val token = ctx.param("orgToken") ?: return BadRequest()
         val org = accountsReadRepository.getOrganization(token) ?: return NotFound()
-        return Ok(OrganizationSummaryDto(org.id, org.name, org.token))
+        return Ok(org.toSummaryDto())
     }
 }

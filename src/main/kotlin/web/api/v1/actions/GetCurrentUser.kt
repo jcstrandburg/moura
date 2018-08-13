@@ -6,8 +6,8 @@ import domain.accounts.IAccountsReadRepository
 import io.javalin.Context
 import services.AuthenticationService
 import web.api.v1.CurrentUserDto
-import web.api.v1.OrganizationSummaryDto
-import web.api.v1.UserDto
+import web.api.v1.toDto
+import web.api.v1.toSummaryDto
 
 class GetCurrentUser(
     authenticationService: AuthenticationService,
@@ -20,8 +20,8 @@ class GetCurrentUser(
         val organizations = organizationRepository.getOrganizationsForUser(user.id)
 
         return Ok(CurrentUserDto(
-            UserDto(id = user.id, name = user.name, alias = user.alias, token = user.token),
-            organizations.map { OrganizationSummaryDto(id = it.id, name = it.name, token = it.token) }
+            user.toDto(),
+            organizations.map { it.toSummaryDto() }
         ))
     }
 }

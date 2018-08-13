@@ -9,8 +9,7 @@ import domain.projects.IProjectRepository
 import io.javalin.Context
 import services.AuthenticationService
 import web.api.v1.DiscussionCommentCreateDto
-import web.api.v1.DiscussionCommentDto
-import java.time.ZoneOffset
+import web.api.v1.toDto
 
 class CreateProjectComment(
     authenticationService: AuthenticationService,
@@ -33,10 +32,6 @@ class CreateProjectComment(
         val message = discussionRepository.createDiscussionMessage(
             DiscussionMessageCreate(project.discussionContextId, authenticatedUser.id, createDto.content))
 
-        return Created(DiscussionCommentDto(
-            id = message.id,
-            userId = message.userId,
-            content = message.content,
-            createdTime = message.createdTime))
+        return Created(message.toDto())
     }
 }

@@ -7,7 +7,7 @@ import domain.accounts.OrganizationCreateSet
 import io.javalin.Context
 import services.AuthenticationService
 import web.api.v1.OrganizationCreateDto
-import web.api.v1.OrganizationSummaryDto
+import web.api.v1.toSummaryDto
 
 class CreateOrganization(
     authenticationService: AuthenticationService,
@@ -28,6 +28,6 @@ class CreateOrganization(
 
         accountsRepository.addUserToOrganization(authenticatedUser.id, org.id)
 
-        return Created(OrganizationSummaryDto(org.id, org.name, org.token))
+        return Created(org.toSummaryDto())
     }
 }
