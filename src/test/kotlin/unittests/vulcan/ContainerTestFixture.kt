@@ -6,6 +6,7 @@ import vulcan.InjectionException
 import vulcan.Lifecycle
 import kotlin.test.assertFailsWith
 
+@Suppress("UNUSED_PARAMETER")
 class ContainerTestFixture: TestCase() {
 
     override fun setUp() {
