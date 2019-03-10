@@ -18,7 +18,7 @@ class CreateProjectComment(
     private val discussionRepository: IDiscussionRepository
 ) : JsonAction(authenticationService) {
     override fun doHandle(ctx: Context): JsonResult {
-        val projectId = ctx.param("projectId")?.toIntOrNull() ?: return BadRequest()
+        val projectId = ctx.pathParam("projectId").toIntOrNull() ?: return BadRequest()
         val project = projectRepository.getProjectById(projectId) ?: return NotFound()
 
         val organization = accountsReadRepository.getOrganization(project.organizationId)

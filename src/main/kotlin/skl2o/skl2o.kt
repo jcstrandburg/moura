@@ -15,7 +15,7 @@ import kotlin.reflect.full.findAnnotation
  * NOTE: Does not play well with leading capitals (i.e. PascalCase instead of camelCase)
  * NOTE: Does not play will with adjacent capitals (i.e. messageXML instead of messageXml)
  */
-fun toMySqlCasing(fieldName: String): String = fieldName.replace(toMySqlCasingRegex, { "_" + it.value.toLowerCase() })
+fun toMySqlCasing(fieldName: String): String = fieldName.replace(toMySqlCasingRegex) { "_" + it.value.toLowerCase() }
 
 private val toMySqlCasingRegex = "[A-Z]".toRegex()
 

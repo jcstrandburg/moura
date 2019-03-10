@@ -5,8 +5,8 @@ import domain.accounts.IAccountsRepository
 import domain.accounts.User
 import domain.accounts.UserChangeSet
 import io.javalin.Context
-import io.javalin.builder.CookieBuilder
 import java.util.*
+import javax.servlet.http.Cookie
 
 class AuthenticationService(val context: Context, val accountRepository: IAccountsRepository, val passwordHasher: BcryptPasswordHasher) {
 
@@ -58,16 +58,16 @@ class AuthenticationService(val context: Context, val accountRepository: IAccoun
     fun clearLogInSuccessRedirectUri() = unsetCookie(LOG_IN_REDIRECT_COOKIE)
 
     private fun setCookie(name: String, value: String) {
-        context.cookie(CookieBuilder(
-            path = "/", // root path so that the cookie gets submitted for all pages
-            name = name,
-            value = value,
-            maxAge = -1, // no expiration
-            secure = false,
-            httpOnly =  false))
+        val cookie = Cookie(name, value)
+        cookie.path = "/"
+        cookie.maxAge = -1
+        cookie.secure = false
+        cookie.isHttpOnly = false
+
+        context.cookie(cookie)
     }
 
-    private fun unsetCookie(name: String) = context.removeCookie("/", name)
+    private fun unsetCookie(name: String) = context.removeCookie(name, path ="/")
 
     companion object {
         private const val AUTHORIZATION_HEADER = "X-Authorization"

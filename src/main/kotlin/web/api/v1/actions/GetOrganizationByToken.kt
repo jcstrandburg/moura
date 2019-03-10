@@ -13,7 +13,7 @@ class GetOrganizationByToken(
 ) : JsonAction(authenticationService) {
     override fun doHandle(ctx: Context): JsonResult {
 
-        val token = ctx.param("orgToken") ?: return BadRequest()
+        val token = ctx.pathParam("orgToken")
         val org = accountsReadRepository.getOrganization(token) ?: return NotFound()
         return Ok(org.toSummaryDto())
     }

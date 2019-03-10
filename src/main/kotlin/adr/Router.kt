@@ -1,8 +1,8 @@
 package adr
 
-import io.javalin.ApiBuilder
 import io.javalin.Context
 import io.javalin.Javalin
+import io.javalin.apibuilder.ApiBuilder
 import kotlin.reflect.KClass
 
 class Router(private val doGetAction: (Context, KClass<*>) -> Action) {

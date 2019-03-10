@@ -13,7 +13,7 @@ class GetUserByToken(
 ) : JsonAction(authenticationService) {
 
     override fun doHandle(ctx: Context): JsonResult {
-        val token = ctx.param("token") ?: return BadRequest()
+        val token = ctx.pathParam("token")
 
         val user = accountsRepository.getUserByToken(token) ?: return NotFound()
         return Ok(user.toDto())

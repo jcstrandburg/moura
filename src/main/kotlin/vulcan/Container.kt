@@ -11,9 +11,8 @@ class Container(private val resolvers: HashMap<KClass<*>, Resolver>) {
 
     constructor() : this(HashMap<KClass<*>, Resolver>())
 
-    fun getNestedContainer(): Container {
-        return Container(HashMap(resolvers.map({ it.key to it.value.getResolverForNestedContainer() }).toMap()))
-    }
+    fun getNestedContainer(): Container =
+        Container(HashMap(resolvers.map { it.key to it.value.getResolverForNestedContainer() }.toMap()))
 
     inline fun <reified T: Any> register(noinline instantiator: Container.() -> T) =
         register(T::class, instantiator, Lifecycle.Singleton)

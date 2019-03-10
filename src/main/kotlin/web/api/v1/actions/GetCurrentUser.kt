@@ -11,13 +11,13 @@ import web.api.v1.toSummaryDto
 
 class GetCurrentUser(
     authenticationService: AuthenticationService,
-    private val organizationRepository: IAccountsReadRepository
+    private val accountsRepository: IAccountsReadRepository
 ) : JsonAction(authenticationService) {
 
     override fun doHandle(ctx: Context): JsonResult {
         val user = authenticationService.getLoggedInUser() ?: return Unauthorized()
 
-        val organizations = organizationRepository.getOrganizationsForUser(user.id)
+        val organizations = accountsRepository.getOrganizationsForUser(user.id)
 
         return Ok(CurrentUserDto(
             user.toDto(),

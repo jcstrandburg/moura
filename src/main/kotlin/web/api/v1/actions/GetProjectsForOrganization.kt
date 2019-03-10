@@ -15,7 +15,7 @@ class GetProjectsForOrganization(
     private val projectRepository: IProjectRepository
 ) : JsonAction(authenticationService) {
     override fun doHandle(ctx: Context): JsonResult {
-        val orgToken = ctx.param("orgToken") ?: return BadRequest()
+        val orgToken = ctx.pathParam("orgToken")
         val parentProjectId = ctx.queryParam("parent")?.toIntOrNull()
 
         val organization = accountsReadRepository.getOrganization(orgToken)?: return NotFound()

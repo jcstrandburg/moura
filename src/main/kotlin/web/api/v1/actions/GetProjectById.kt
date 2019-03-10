@@ -14,7 +14,7 @@ class GetProjectById(
     private val accountsReadRepository: IAccountsReadRepository
 ) : JsonAction(authenticationService) {
     override fun doHandle(ctx: Context): JsonResult {
-        val projectId = ctx.param("projectId")?.toIntOrNull() ?: return BadRequest()
+        val projectId = ctx.pathParam("projectid").toIntOrNull() ?: return BadRequest()
         val project = projectRepository.getProjectById(projectId) ?: return NotFound()
 
         // dont' expose the existence of projects to users who shouldn't be able to see them

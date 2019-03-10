@@ -143,6 +143,7 @@ WHERE r.organization_id=:organizationId
         val email: String,
         val token: String)
 
+    @Suppress("unused")
     class DbUserChangeSet(
         val username: String? = null,
         val password: String? = null,

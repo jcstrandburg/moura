@@ -12,7 +12,7 @@ class ServeApp(
         val user = authenticationService.getLoggedInUser()
 
         if (user == null) {
-            authenticationService.setLogInSuccessRedirectUri(ctx.uri())
+            authenticationService.setLogInSuccessRedirectUri(ctx.path())
             return ctx.redirect("/signin")
         }
         else {
